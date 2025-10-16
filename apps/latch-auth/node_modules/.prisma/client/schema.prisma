@@ -1,0 +1,270 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventType {
+  LOGIN
+  LOGOUT
+  OTP_REQUEST
+  OTP_FAILED
+  REFRESH_SUCCESS
+  REFRESH_FAILED
+  TOKEN_REUSE
+  SESSION_REVOKE
+  SESSION_REVOKE_ALL
+  SESSION_EXPIRED
+  USED_REFRESH_TOKEN_PURGE
+  SECURITY_CSRF_ERROR
+  SECURITY_CSRF_MISMATCH
+  AUTH_JWT_FAILURE
+  TENANT_VALIDATION_ERROR
+  TENANT_MISMATCH
+  USER_DATA_ACCESS_ATTEMPT
+  USER_DATA_ACCESSED
+  USER_LIST_ACCESSED
+  USER_LIST_ACCESS_DENIED
+  USER_PROFILE_UPDATE
+  USER_PROFILE_UPDATE_FAILED
+  ROLE_ACCESS_DENIED
+  ROLE_ACCESS_GRANTED
+  PRIVILEGE_ACCESS_DENIED
+  PRIVILEGE_ACCESS_GRANTED
+  SENSITIVE_DATA_ACCESSED
+  AUDIT_TRAIL_ACCESS_DENIED
+  AUDIT_TRAIL_ACCESS_ATTEMPTED
+  AUDIT_TRAIL_ACCESSED
+  DATA_EXPORT_ATTEMPTED
+  DATA_EXPORT_ATTEMPT_DENIED
+  DATA_EXPORT_INITIATED
+  DATA_EXPORTED
+  SECURITY_STATUS_CHECKED
+  AUTHENTICATION_VERIFICATION_FAILED
+  AUTHENTICATION_VERIFIED
+  LOGOUT_ATTEMPT_INVALID
+}
+
+enum EventSeverity {
+  INFO
+  SECURITY
+  ERROR
+}
+
+model Tenant {
+  id        String          @id @default(uuid())
+  name      String
+  slug      String          @unique
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  users     User[]
+  oauth     OAuthProvider[]
+  policies  TenantPolicy?
+  branding  Json?
+
+  OTP OTP[]
+
+  Session Session[]
+
+  Role Role[]
+
+  MFAFactor MFAFactor[]
+
+  BackupCode BackupCode[]
+}
+
+model User {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  phone           String
+  email           String?
+  name            String?
+  passwordHash    String? // optional fallback
+  isPhoneVerified Boolean  @default(false)
+  isEmailVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  otpCodes         OTP[]
+  oauthProviders   OAuthProvider[]
+  sessions         Session[]
+  roles            UserRole[]
+  mfaFactors       MFAFactor[]
+  backupCodes      BackupCode[]
+  UsedRefreshToken UsedRefreshToken[]
+
+  @@unique([tenantId, phone]) // phone unique per tenant
+  @@unique([tenantId, email])
+}
+
+model OTP {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  userId    String? // nullable until user created
+  user      User?    @relation(fields: [userId], references: [id])
+  channel   String // "PHONE" | "EMAIL"
+  codeHash  String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  refreshHash  String
+  userAgent    String?
+  ipAddress    String?
+  csrfToken    String?
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime
+  expiresAt    DateTime // aligned with refresh token expiry
+  revoked      Boolean  @default(false)
+
+  RefreshToken     RefreshToken[]
+  UsedRefreshToken UsedRefreshToken[]
+}
+
+model RefreshToken {
+  id         String             @id @default(uuid())
+  sessionId  String
+  session    Session            @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tokenHash  String             @unique
+  parentId   String? // previous token in chain
+  parent     RefreshToken?      @relation("parent_child", fields: [parentId], references: [id])
+  children   RefreshToken[]     @relation("parent_child")
+  familyId   String // id of the root token (first token in family)
+  revoked    Boolean            @default(false)
+  usedTokens UsedRefreshToken[]
+  expiresAt  DateTime
+  createdAt  DateTime           @default(now())
+
+  @@index([familyId])
+  @@index([sessionId])
+}
+
+model UsedRefreshToken {
+  id             String        @id @default(cuid())
+  tokenHash      String        @unique
+  usedAt         DateTime      @default(now())
+  sessionId      String?
+  userId         String?
+  session        Session?      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenId String?
+  RefreshToken   RefreshToken? @relation(fields: [refreshTokenId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@index([usedAt])
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([refreshTokenId])
+}
+
+model Event {
+  id       String    @id @default(uuid())
+  userId   String?
+  tenantId String?
+  type     EventType
+
+  sessionId String? @db.Uuid
+  familyId  String?
+  reason    String?
+
+  severity  EventSeverity @default(INFO)
+  metadata  Json?
+  ipAddress String? // NEW: client IP for forensics
+  userAgent String? // NEW: client UA for forensics
+
+  integrityHash String   @db.VarChar(128)
+  prevHash      String?  @db.VarChar(128)
+  createdAt     DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([sessionId])
+  @@index([familyId])
+  @@index([reason])
+}
+
+model OAuthProvider {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  provider       String // e.g., GOOGLE, GITHUB, APPLE
+  providerUserId String
+  accessToken    String?
+  refreshToken   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([tenantId, provider, providerUserId])
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  name        String
+  description String?
+  isSystem    Boolean    @default(false) // e.g., built-in ADMIN role
+  privileges  String[]   @default([]) // list of named permissions
+  userRoles   UserRole[]
+  createdAt   DateTime   @default(now())
+
+  @@unique([tenantId, name])
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+}
+
+model MFAFactor {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  type      String // SMS, TOTP, WEBAUTHN, BACKUP_CODE
+  secret    String? // e.g., TOTP secret or WebAuthn credential JSON
+  phone     String? // for SMS factor
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BackupCode {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  codeHash  String
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model TenantPolicy {
+  id                        String   @id @default(uuid())
+  tenantId                  String   @unique
+  tenant                    Tenant   @relation(fields: [tenantId], references: [id])
+  requireMFA                Boolean  @default(false)
+  allowedFactors            Json? // ["SMS","TOTP","WEBAUTHN"]
+  privilegedUserMFARequired Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
