@@ -1,15 +1,14 @@
-// tests/auth/logout.spec.ts
 import { AuthController } from '../../src/auth/auth.controller';
 import { AuthService } from '../../src/auth/auth.service';
 import { EventLogService } from '../../src/events/event.service';
-import express from 'express';
+import { Response, Request } from 'express'; // 👈 IMPORT Response and Request
 
 describe('AuthController.logout (two-event)', () => {
   let ctrl: AuthController;
   let mockAuth: Partial<AuthService>;
   let mockEvents: Partial<EventLogService>;
-  let res: Partial<express.Response>;
-  let req: Partial<express.Request>;
+  let res: Response; // 👈 Properly typed
+  let req: Request; // 👈 Properly typed
 
   beforeEach(() => {
     mockAuth = {
@@ -23,16 +22,18 @@ describe('AuthController.logout (two-event)', () => {
 
     ctrl = new AuthController(mockAuth as any, mockEvents as any);
 
+    // 👇 Create a proper mock Response
     res = {
-      cookie: jest.fn(),
-      clearCookie: jest.fn(),
-    } as any;
+      clearCookie: jest.fn().mockReturnThis(),
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    } as unknown as Response;
 
     req = {
       ip: '1.2.3.4',
       headers: { 'user-agent': 'jest' },
       cookies: {},
-    } as any;
+    } as unknown as Request;
   });
 
   it('valid session → revokes, clears cookies, logs LOGOUT', async () => {
@@ -55,7 +56,7 @@ describe('AuthController.logout (two-event)', () => {
       sessionId,
       expect.any(Object),
     );
-    expect(res.clearCookie).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalled(); // ✅ Now works
     expect(mockEvents.logEvent).toHaveBeenCalledWith(
       'LOGOUT',
       expect.objectContaining({ userId: 'user1', tenantId: 't1' }),
@@ -80,7 +81,7 @@ describe('AuthController.logout (two-event)', () => {
       'LOGOUT',
       expect.objectContaining({ userId: null }),
     );
-    expect(res.clearCookie).toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalled(); // ✅ Now works
     expect(result).toEqual({ ok: true });
   });
 });

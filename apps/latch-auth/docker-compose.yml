@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  # ---------- PostgreSQL ----------
+  db:
+    image: postgres:15
+    container_name: latch_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: latch
+      POSTGRES_PASSWORD: latch123
+      POSTGRES_DB: latch_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - latch_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U latch -d latch_auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7
+    container_name: latch_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------- Latch Auth Service ----------
+  latch-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: latch_auth
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    restart: always
+    # Uncomment below for live dev inside container
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+
+volumes:
+  latch_db_data:

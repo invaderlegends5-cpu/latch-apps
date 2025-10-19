@@ -14,8 +14,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from '../auth/types/auth.types';
-import { EventLogService } from 'src/events/event.service';
-import { SessionGuard } from 'src/auth/guards/session.guard';
+import { EventLogService } from '../events/event.service';
+import { SessionGuard } from '../auth/guards/session.guard';
 
 @Controller('protected')
 @UseGuards(JwtAuthGuard, SessionGuard, TenantGuard)
