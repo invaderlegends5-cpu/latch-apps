@@ -75,6 +75,7 @@ import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 // ❌ Remove: PrismaService import (no longer needed here)
 import { CacheControlInterceptor } from './interceptors/cache-control.interceptor';
 import { ClearCookiesExceptionFilter } from './auth/filters/clear-cookies-exception.filter';
