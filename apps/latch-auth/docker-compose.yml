@@ -45,7 +45,7 @@ services:
       redis:
         condition: service_healthy
     env_file:
-      - .env
+      - .env.test
     ports:
       - "3000:3000"
     restart: always
