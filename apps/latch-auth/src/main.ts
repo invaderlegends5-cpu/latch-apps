@@ -84,7 +84,31 @@ Sentry.init({
   tracesSampleRate: 0.1,
 });
 
+async function waitForDatabase() {
+  const prisma = new PrismaClient();
+  const maxAttempts = 30;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    try {
+      await prisma.$connect();
+      console.log('✅ Connected to database');
+      await prisma.$disconnect();
+      return;
+    } catch (error) {
+      attempts++;
+      console.log(`⏳ Waiting for database... (${attempts}/${maxAttempts})`);
+      if (attempts === maxAttempts) {
+        console.error('❌ Failed to connect to database:', error);
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+}
+
 async function bootstrap() {
+  await waitForDatabase();
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser(process.env.COOKIE_SECRET ?? 'dev_cookie_secret'));
