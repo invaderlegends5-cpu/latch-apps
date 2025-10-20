@@ -10,8 +10,8 @@ import {
 import { EventLogService } from './event.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
-import * as authTypes from 'src/auth/types/auth.types';
-import { SessionGuard } from 'src/auth/guards/session.guard';
+import * as authTypes from '../auth/types/auth.types';
+import { SessionGuard } from '../auth/guards/session.guard';
 
 @Controller('tenant/events')
 @UseGuards(JwtAuthGuard, SessionGuard, TenantGuard) // ✅ tenant isolation guaranteed

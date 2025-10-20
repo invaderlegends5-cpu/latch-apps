@@ -78,7 +78,7 @@ import { ValidationPipe } from '@nestjs/common';
 // ❌ Remove: PrismaService import (no longer needed here)
 import { CacheControlInterceptor } from './interceptors/cache-control.interceptor';
 import { ClearCookiesExceptionFilter } from './auth/filters/clear-cookies-exception.filter';
-
+import 'tsconfig-paths/register';
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 0.1,

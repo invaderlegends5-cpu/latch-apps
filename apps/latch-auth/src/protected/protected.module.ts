@@ -17,9 +17,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ProtectedController } from './protected.controller';
 import { PrismaService } from '../prisma/prisma.service';
-import { EventLogService } from 'src/events/event.service';
-import { SessionGuard } from 'src/auth/guards/session.guard';
-import { AuthModule } from 'src/auth/auth.module';
+import { EventLogService } from '../events/event.service';
+import { SessionGuard } from '../auth/guards/session.guard';
+import { AuthModule } from '../auth/auth.module';
 
 // ✅ Guards are NOT normally added as providers unless they depend on DI.
 // JwtAuthGuard & TenantGuard come from AuthModule, so no need to register them here.

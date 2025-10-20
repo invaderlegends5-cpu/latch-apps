@@ -10,7 +10,7 @@ import { ProtectedModule } from './protected/protected.module';
 import { EventLogService } from './events/event.service';
 import { EventsModule } from './events/events.module';
 import { SecurityModule } from './security/security.module';
-
+import { HealthModule } from './health/health.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -42,8 +42,9 @@ import { SecurityModule } from './security/security.module';
     UsersModule,
     ProtectedModule,
     EventsModule,
+    HealthModule,
   ],
-  providers: [PrismaService,
+   providers: [PrismaService,
     //  EventLogService
     ],
 })

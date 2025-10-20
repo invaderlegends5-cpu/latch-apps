@@ -11,7 +11,7 @@ import { NormalizeRequestInterceptor } from './interceptors/normalize-request.in
 import { AuthController } from './auth.controller';
 import { CsrfGuard } from './guards/csrf.guard';
 import { PrismaService } from '../prisma/prisma.service';
-import { EventLogService } from 'src/events/event.service';
+import { EventLogService } from '../events/event.service';
 import { SessionGuard } from './guards/session.guard';
 
 @Module({

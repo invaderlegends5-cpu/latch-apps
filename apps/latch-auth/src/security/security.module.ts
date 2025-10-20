@@ -26,7 +26,7 @@ import { ConfigService } from '@nestjs/config';
 import { SecurityController } from './security.controller';
 import { SecurityMonitoringService } from './security-monitor.service';
 import { EventLogService } from '../events/event.service';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
