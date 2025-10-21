@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="3" failures="0" errors="0" time="3.944">
+  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-21T20:03:34" time="2.858" tests="3">
+    <testcase classname="EventController calls findByType with provided filters" name="EventController calls findByType with provided filters" time="0.015">
+    </testcase>
+    <testcase classname="EventController calls findRecent and returns recent events" name="EventController calls findRecent and returns recent events" time="0.004">
+    </testcase>
+    <testcase classname="EventController calls findByUser and returns user events" name="EventController calls findByUser and returns user events" time="0.005">
+    </testcase>
+  </testsuite>
+</testsuites>

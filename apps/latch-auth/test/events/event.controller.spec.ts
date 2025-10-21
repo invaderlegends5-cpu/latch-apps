@@ -1,7 +1,10 @@
 import { EventController } from '../../src/events/event.controller';
-import { EventLogService } from '../../src/events/event.service';
+import { EventLogService, PaginatedResult } from '../../src/events/event.service';
+import { Response } from 'express';
 
-// Mock Prisma $Enums.EventType safely, preserving PrismaClient
+type MockResponse = any;
+
+// --- Mock Prisma enums safely ---
 jest.mock('@prisma/client', () => {
   const originalModule = jest.requireActual('@prisma/client');
   return {
@@ -19,23 +22,42 @@ jest.mock('@prisma/client', () => {
   };
 });
 
-describe('EventAdminController', () => {
+// --- Helper to mock Express Response ---
+function createMockRes(): Response {
+  return {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockReturnThis(),
+    send: jest.fn().mockReturnThis(),
+    cookie: jest.fn().mockReturnThis(),
+    clearCookie: jest.fn().mockReturnThis(),
+  } as any;
+}
+
+describe('EventController', () => {
   let ctrl: EventController;
-  let mockEvents: Partial<EventLogService>;
-  const mockReq = { user: { tenantId: 't1' } } as any;
+  let mockEvents: jest.Mocked<EventLogService>;
+  let mockRes: MockResponse;
 
   beforeEach(() => {
-    mockEvents = { queryEvents: jest.fn().mockResolvedValue([{ id: 1 }]) };
-    ctrl = new EventController(mockEvents as any);
+    mockEvents = {
+      findRecent: jest.fn(),
+      findByType: jest.fn(),
+      findByUser: jest.fn(),
+      logEvent: jest.fn(),
+    } as any;
+
+    ctrl = new EventController(mockEvents);
+    mockRes = createMockRes();
   });
 
-  it('calls queryEvents with provided filters', async () => {
-    await ctrl.byType(
-      mockRes,
-      'LOGIN_SUCCESS',
-      10, // limit
-      0, // offset
-    );
+  it('calls findByType with provided filters', async () => {
+    const fake: PaginatedResult<any> = {
+      data: [{ id: 1 }],
+      meta: { total: 1, limit: 10, offset: 0, hasNext: false },
+    };
+    mockEvents.findByType.mockResolvedValue(fake);
+
+    const result = await ctrl.byType(mockRes, 'LOGIN_SUCCESS', 10, 0);
 
     expect(mockEvents.findByType).toHaveBeenCalledWith(
       'LOGIN_SUCCESS',
@@ -44,10 +66,38 @@ describe('EventAdminController', () => {
       undefined,
       undefined,
     );
+    expect(result).toEqual(fake);
   });
 
-  it('returns ok + data', async () => {
-    const res = await ctrl.getEvents(mockReq);
-    expect(res).toEqual({ ok: true, count: 1, data: [{ id: 1 }] });
+  it('calls findRecent and returns recent events', async () => {
+    const fake: PaginatedResult<any> = {
+      data: [{ id: 2, type: 'LOGOUT' }],
+      meta: { total: 1, limit: 5, offset: 0, hasNext: false },
+    };
+    mockEvents.findRecent.mockResolvedValue(fake);
+
+    const result = await ctrl.recent(mockRes, 5, 0);
+
+    expect(mockEvents.findRecent).toHaveBeenCalledWith(5, 0, undefined, undefined);
+    expect(result).toEqual(fake);
+  });
+
+  it('calls findByUser and returns user events', async () => {
+    const fake: PaginatedResult<any> = {
+      data: [{ id: 3, userId: 'u1' }],
+      meta: { total: 1, limit: 5, offset: 0, hasNext: false },
+    };
+    mockEvents.findByUser.mockResolvedValue(fake);
+
+    const result = await ctrl.byUser(mockRes, 'u1', 5, 0);
+
+    expect(mockEvents.findByUser).toHaveBeenCalledWith(
+      'u1',
+      5,
+      0,
+      undefined,
+      undefined,
+    );
+    expect(result).toEqual(fake);
   });
 });
