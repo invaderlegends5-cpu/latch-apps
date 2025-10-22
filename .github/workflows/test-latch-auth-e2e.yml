@@ -19,7 +19,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   CI_ARTIFACT_PATH: latch-auth-ci-artifacts
@@ -35,12 +35,12 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: latchdb
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -94,11 +94,11 @@ jobs:
 
       - name: Apply Prisma Migrations
         working-directory: ./latch-apps/apps/latch-auth
-        run: bunx prisma migrate deploy
+        run: npx prisma migrate deploy
 
       - name: Run Prisma Seed (Mock)
         working-directory: ./latch-apps/apps/latch-auth
-        run: bunx prisma db seed || echo "Seed skipped (already populated)"
+        run: npx prisma db seed || echo "Seed skipped (already populated)"
 
       - name: Verify Seed Presence
         working-directory: ./latch-apps/apps/latch-auth
