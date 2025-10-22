@@ -22,7 +22,7 @@ describe('AppController (e2e)', () => {
 
   it('/ (GET)', () => {
     return request(app.getHttpServer())
-      .get('/v1/')  // ✅ Use the prefixed route
+      .get('/v1')  // ✅ Use the prefixed route
       .expect(200)
       .expect('Hello World!');
   });
