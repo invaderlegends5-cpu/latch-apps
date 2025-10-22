@@ -35,9 +35,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: latchdb
+          POSTGRES_USER: latch
+          POSTGRES_PASSWORD: latch123
+          POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
         options: >-
           --health-cmd="pg_isready -U postgres -d latchdb"
