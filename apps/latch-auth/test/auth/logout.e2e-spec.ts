@@ -32,7 +32,7 @@ describe('Auth Lifecycle (E2E)', () => {
     expect(otpRes.body).toHaveProperty('ok', true);
 
     const verifyRes = await request(app.getHttpServer())
-      .post('/v1/auth/verify-otp')
+      .post('/v1/auth/otpVerify')
       .send({
         phone: '+15551234567',
         code: '123456',
