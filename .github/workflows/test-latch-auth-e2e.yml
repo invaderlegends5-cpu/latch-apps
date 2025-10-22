@@ -106,18 +106,7 @@ jobs:
 
       - name: Verify Seed Presence
         working-directory: ./latch-apps/apps/latch-auth
-        run: |
-          echo "Running tenant count query..."
-          OUTPUT=$(npx prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";"))
-          echo "Raw query output:"
-          echo "$OUTPUT"
-      
-          CNT=$(echo "$OUTPUT" | grep -Eo '[0-9]+')
-          if [ -z "$CNT" ] || [ "$CNT" -eq 0 ]; then
-            echo "❌ No tenants found — seed likely failed."
-            exit 1
-          fi
-          echo "✅ Mock seed verified — $CNT tenants exist."
+        run: node seed-check.ts
       
 
       - name: Run E2E Tests with Coverage
