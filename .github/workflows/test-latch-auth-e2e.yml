@@ -1,0 +1,187 @@
+# ───────────────────────────────────────────────────────────────
+# Latch Auth E2E + Coverage CI Workflow
+# Purpose: Run E2E tests with coverage, verify DB seed, build Docker, upload artifacts, and post PR summary
+# ───────────────────────────────────────────────────────────────
+
+name: Latch Auth E2E Tests + Coverage
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "dev", "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  REDIS_URL: redis://localhost:6379
+  EVENT_SIGNING_SECRET: mock-signing-secret
+  CI_ARTIFACT_PATH: latch-auth-ci-artifacts
+  NODE_ENV: test
+
+jobs:
+  e2e:
+    name: Run Latch Auth E2E Tests + Coverage & Docker Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: latchdb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout latch-apps repo
+        uses: actions/checkout@v4
+        with:
+          repository: invaderlegends5-cpu/latch-apps
+          path: latch-apps
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Restore Bun & Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun
+            apps/latch-auth/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/latch-auth/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install Dependencies
+        working-directory: apps/latch-auth
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: apps/latch-auth
+        run: bunx prisma generate
+
+      - name: Wait for PostgreSQL Service
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            nc -z localhost 5432 && echo "Postgres is up!" && break
+            sleep 2
+          done
+
+      - name: Apply Prisma Migrations
+        working-directory: apps/latch-auth
+        run: bunx prisma migrate deploy
+
+      - name: Run Prisma Seed (Mock)
+        working-directory: apps/latch-auth
+        run: bunx prisma db seed || echo "Seed skipped (already populated)"
+
+      - name: Verify Seed Presence
+        working-directory: apps/latch-auth
+        run: |
+          CNT=$(bunx prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";") | grep -Eo '[0-9]+')
+          if [ -z "$CNT" ] || [ "$CNT" -eq 0 ]; then
+            echo "❌ No tenants found — seed likely failed."
+            exit 1
+          fi
+          echo "✅ Mock seed verified — $CNT tenants exist."
+
+      - name: Run E2E Tests with Coverage
+        working-directory: apps/latch-auth
+        run: |
+          mkdir -p ${{ env.CI_ARTIFACT_PATH }}
+          timeout 300s bun test:e2e --ci --no-colors \
+            --coverage \
+            --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
+            --coverageDirectory=coverage || (echo "❌ E2E tests failed or timed out!" && exit 1)
+
+      - name: Build Docker Image (Prod-like)
+        working-directory: apps/latch-auth
+        run: docker build --no-cache -t latch-auth:e2e -f Dockerfile .
+
+      - name: Run Latch Auth Docker Container
+        run: |
+          docker run -d --rm --name latch_auth_test -p 3000:3000 \
+            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
+            -e REDIS_URL="${{ env.REDIS_URL }}" \
+            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            latch-auth:e2e
+          echo "Waiting for Latch Auth API to boot..."
+          for i in {1..40}; do
+            curl -fsS http://localhost:3000/health >/dev/null 2>&1 && echo "✅ Latch Auth API healthy!" && break
+            sleep 2
+          done
+
+      - name: Health Check (/health)
+        run: |
+          curl -f http://localhost:3000/health || (echo "❌ Health check failed!" && exit 1)
+          echo '{"health":"ok","checkedAt":"'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"}' > ${{ env.CI_ARTIFACT_PATH }}/health.json || true
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latch-auth-coverage
+          path: apps/latch-auth/coverage
+          if-no-files-found: warn
+
+      - name: Upload Test Results & CI Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latch-auth-e2e-results
+          path: |
+            apps/latch-auth/${{ env.CI_ARTIFACT_PATH }}/*
+            apps/latch-auth/junit.xml
+          if-no-files-found: ignore
+
+      - name: Generate E2E + Coverage Summary
+        id: summary
+        working-directory: apps/latch-auth
+        run: |
+          TEST_SUMMARY="❌ E2E test results not found"
+          if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
+            TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+            if [ "$FAILURES" -eq 0 ]; then
+              TEST_SUMMARY="✅ E2E tests passed ($TOTAL tests)"
+            else
+              TEST_SUMMARY="❌ E2E tests failed: $FAILURES/$TOTAL failed"
+            fi
+          fi
+
+          COVERAGE_SUMMARY="❌ Coverage not found"
+          if [ -f "coverage/lcov-report/index.html" ]; then
+            COVERAGE=$(grep -o 'Lines.*[0-9]\+%' coverage/lcov-report/index.html | head -1 || echo "Coverage data available")
+            COVERAGE_SUMMARY="📊 Coverage: $COVERAGE"
+          fi
+
+          SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
+          echo "::set-output name=text::$SUMMARY"
+
+      - name: Cleanup Docker Containers
+        if: always()
+        run: docker ps -a --filter "name=latch_auth_test" -q | xargs -r docker rm -f || true

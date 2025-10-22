@@ -1,0 +1,138 @@
+name: Test Latch Auth (Mock CI)
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+  pull_request:
+    branches: [ "dev", "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  REDIS_URL: redis://localhost:6379
+  EVENT_SIGNING_SECRET: mock-signing-secret
+  NODE_ENV: test
+
+jobs:
+  test:
+    name: Run Latch Auth Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: latchdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: invaderlegends5-cpu/latch-apps
+          path: latch-apps
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        working-directory: apps/latch-auth
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: apps/latch-auth
+        run: bunx prisma generate
+
+      - name: Wait for DB Ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..20}; do
+            nc -z localhost 5432 && echo "Postgres is up!" && break
+            sleep 2
+          done
+      - name: Apply Prisma Migrations
+        working-directory: apps/latch-auth
+        run: bunx prisma migrate deploy
+
+      - name: Run Prisma Seed (Mock)
+        working-directory: apps/latch-auth
+        run: bunx prisma db seed || echo "Seed skipped (no seed script found)"
+
+      # 🧠 Verify seed data actually exists
+      - name: Verify Seed Presence
+        working-directory: apps/latch-auth
+        run: |
+          echo "Checking for seeded tenant..."
+          bunx prisma db execute --file <(echo "SELECT COUNT(*) FROM \"Tenant\";") --url ${{ env.DATABASE_URL }} | tee result.txt
+          if grep -q "0" result.txt; then
+            echo "❌ No tenants found — seed likely failed."
+            exit 1
+          fi
+          echo "✅ Mock seed verified — tenants exist."
+      - name: Run Unit Tests
+        working-directory: apps/latch-auth
+        run: npx jest --ci --no-colors
+
+      # 🧩 Integration Boot Check
+      - name: Docker Build (Mock Local API)
+        working-directory: apps/latch-auth
+        run: docker build -t latch-auth:test .
+
+      - name: Run Latch Auth API (Background)
+        run: |
+          docker run -d --name latch_auth_test \
+            --network=host \
+            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
+            -e REDIS_URL="${{ env.REDIS_URL }}" \
+            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            -e NODE_ENV="test" \
+            latch-auth:test
+      
+          echo "Waiting for Latch Auth API to boot..."
+          for i in {1..30}; do
+            if curl -fs http://localhost:3000/v1/health >/dev/null 2>&1; then
+              echo "✅ Latch Auth API is healthy!"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "❌ API never became healthy"
+          docker logs latch_auth_test
+          exit 1
+      - name: Health Check (via /health)
+        run: |
+          echo "Performing /health verification..."
+          curl -f http://localhost:3000/v1/health || exit 1
+          echo "✅ Health check passed."
+      - name: Cleanup Containers
+        if: always()
+        run: docker rm -f latch_auth_test || true
+
+      - name: Upload Test Artifacts (Optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latch-auth-test-results
+          path: apps/latch-auth/junit.xml
+          if-no-files-found: ignore

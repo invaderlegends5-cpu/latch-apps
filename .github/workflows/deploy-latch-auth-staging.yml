@@ -1,0 +1,78 @@
+# ───────────────────────────────────────────────────────────────
+# Latch Auth Staging Deploy + Verify  (Phase 4.2)
+# Reference: done.pdf → Deployment verification pattern
+# Purpose: Build, run, and validate the Latch Auth container in CI.
+# ───────────────────────────────────────────────────────────────
+
+name: Deploy Latch Auth (Staging Verify)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "dev" ]
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  REDIS_URL: redis://localhost:6379
+  EVENT_SIGNING_SECRET: staging-signing-secret
+  NODE_ENV: production
+
+jobs:
+  staging:
+    name: Build + Verify Latch Auth Staging Container
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: latchdb
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout latch-apps repo
+        uses: actions/checkout@v4
+        
+      - name: Build Docker Image
+        working-directory: apps/latch-auth
+        run: docker build -t latch-auth:staging .
+
+      - name: Run Latch Auth (Background)
+        working-directory: apps/latch-auth
+        run: |
+          docker run -d --name latch_auth_staging \
+            --network host \
+            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
+            -e REDIS_URL="${{ env.REDIS_URL }}" \
+            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            -p 3000:3000 latch-auth:staging
+
+          echo "Waiting for service to start..."
+          for i in {1..25}; do
+            if curl -fs http://localhost:3000/v1/health >/dev/null 2>&1; then
+              echo "✅ Latch Auth container is healthy!"
+              break
+            fi
+            sleep 3
+          done
+
+      - name: Verify /v1/health Endpoint
+        run: |
+          timeout 30s curl -f http://localhost:3000/v1/health || (echo "❌ Health verification failed!" && exit 1)
+          echo "✅ /v1/health verified successfully."
+
+      - name: Cleanup Containers
+        if: always()
+        run: docker rm -f latch_auth_staging || true

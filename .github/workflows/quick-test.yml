@@ -1,0 +1,106 @@
+# ───────────────────────────────────────────────────────────────
+# Latch Auth Unit Test Workflow (Quick Test)
+# Purpose: Run isolated unit tests without DB or Docker, fast feedback
+# ───────────────────────────────────────────────────────────────
+
+name: Quick Test (Unit Only)
+
+on:
+  push:
+    branches-ignore: []
+  pull_request:
+    branches-ignore: []
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_ENV: test
+  CI_ARTIFACT_PATH: latch-auth-ci-artifacts
+
+jobs:
+  quick-test:
+    name: Run Latch Auth Unit Tests (No DB, No Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout latch-apps
+        uses: actions/checkout@v4
+        with:
+          repository: invaderlegends5-cpu/latch-apps
+          path: latch-apps
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # 🟢 Optimized Bun + Node Modules Cache
+      - name: Restore Bun & Node Modules Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun
+            apps/latch-auth/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/latch-auth/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install Dependencies
+        working-directory: apps/latch-auth
+        run: bun install --frozen-lockfile
+
+      # 🟣 Run Jest Unit Tests + Export JUnit Results
+      - name: Run Unit Tests
+        working-directory: apps/latch-auth
+        run: |
+          mkdir -p ${{ env.CI_ARTIFACT_PATH }}
+          bunx jest --ci --no-colors \
+            --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
+            --reporters=default \
+            --reporters=jest-junit
+
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latch-auth-unit-results
+          path: apps/latch-auth/${{ env.CI_ARTIFACT_PATH }}/junit.xml
+          if-no-files-found: ignore
+
+      #- name: Checkout latch-apps
+        #uses: actions/checkout@v4
+        #with:
+          #repository: invaderlegends5-cpu/latch-apps
+          #path: latch-apps
+          #token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Unit Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Tests
+          path: apps/latch-auth/latch-auth-ci-artifacts/junit.xml  # relative to latch-apps root
+          reporter: jest-junit
+          token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: latch-apps
+        
+      # ────────────── Generate Unit Test Summary ──────────────
+      - name: Generate Unit Test Summary
+        id: summary
+        run: |
+          if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
+            TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+            if [ "$FAILURES" -eq 0 ]; then
+              SUMMARY="✅ Unit tests passed ($TOTAL tests)"
+            else
+              SUMMARY="❌ Unit tests failed: $FAILURES/$TOTAL failed"
+            fi
+          else
+            SUMMARY="❌ Unit test results not found"
+          fi
+          echo "::set-output name=text::$SUMMARY"
