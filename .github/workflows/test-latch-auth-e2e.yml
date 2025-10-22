@@ -100,11 +100,11 @@ jobs:
         working-directory: ./latch-apps/apps/latch-auth
         run: bunx prisma db seed || echo "Seed skipped (already populated)"
 
-      - name: Verify Seed Presence
+        - name: Verify Seed Presence
         working-directory: ./latch-apps/apps/latch-auth
         run: |
           echo "Running tenant count query..."
-          OUTPUT=$(bun prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";"))
+          OUTPUT=$(npx prisma db query --url "${{ env.DATABASE_URL }}" --query 'SELECT COUNT(*) AS cnt FROM "Tenant";')
           echo "Raw query output:"
           echo "$OUTPUT"
       
@@ -114,6 +114,7 @@ jobs:
             exit 1
           fi
           echo "✅ Mock seed verified — $CNT tenants exist."
+      
       
 
       - name: Run E2E Tests with Coverage
