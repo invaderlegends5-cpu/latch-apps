@@ -83,7 +83,7 @@ jobs:
         if: always()
         with:
           name: Unit Tests
-          path: apps/latch-auth/latch-auth-ci-artifacts/junit.xml  # relative to latch-apps root
+          path: latch-auth-ci-artifacts/junit.xml   # relative to working-directory
           reporter: jest-junit
           token: ${{ secrets.GITHUB_TOKEN }}
           working-directory: apps/latch-auth
