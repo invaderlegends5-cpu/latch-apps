@@ -104,7 +104,7 @@ jobs:
         working-directory: ./latch-apps/apps/latch-auth
         run: |
           echo "Running tenant count query..."
-          OUTPUT=$(npx prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";"))
+          OUTPUT=$(bun prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";"))
           echo "Raw query output:"
           echo "$OUTPUT"
       
