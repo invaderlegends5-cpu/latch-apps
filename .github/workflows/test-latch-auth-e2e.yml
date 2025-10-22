@@ -19,7 +19,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   CI_ARTIFACT_PATH: latch-auth-ci-artifacts
@@ -35,12 +35,12 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: latchdb
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}"
+          --health-cmd="pg_isready -U postgres -d latchdb"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -104,7 +104,7 @@ jobs:
         working-directory: ./latch-apps/apps/latch-auth
         run: |
           echo "Running tenant count query..."
-          OUTPUT=$(bun prisma db query --url "${{ env.DATABASE_URL }}" --query 'SELECT COUNT(*) AS cnt FROM "Tenant";')
+          OUTPUT=$(bun prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";"))
           echo "Raw query output:"
           echo "$OUTPUT"
       
@@ -114,7 +114,6 @@ jobs:
             exit 1
           fi
           echo "✅ Mock seed verified — $CNT tenants exist."
-      
       
 
       - name: Run E2E Tests with Coverage
