@@ -102,7 +102,7 @@ jobs:
 
       - name: Run Prisma Seed (Mock)
         working-directory: ./latch-apps/apps/latch-auth
-        run: npx prisma db seed || echo "Seed skipped (already populated)"
+        run: bun prisma db seed || echo "Seed skipped (already populated)"
 
       - name: Verify Seed Presence
         working-directory: ./latch-apps/apps/latch-auth
