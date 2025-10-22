@@ -100,7 +100,7 @@ jobs:
         working-directory: ./latch-apps/apps/latch-auth
         run: bunx prisma db seed || echo "Seed skipped (already populated)"
 
-        - name: Verify Seed Presence
+      - name: Verify Seed Presence
         working-directory: ./latch-apps/apps/latch-auth
         run: |
           echo "Running tenant count query..."
