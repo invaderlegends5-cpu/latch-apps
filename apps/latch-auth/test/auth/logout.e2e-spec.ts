@@ -12,6 +12,10 @@ describe('Auth Lifecycle (E2E)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+
+    // ✅ Apply same global prefix as in main.ts
+    app.setGlobalPrefix('v1');
+
     await app.init();
   });
 
