@@ -103,4 +103,4 @@ jobs:
           else
             SUMMARY="❌ Unit test results not found"
           fi
-          echo "::set-output name=text::$SUMMARY"
+          echo "text=$SUMMARY" >> $GITHUB_OUTPUT
