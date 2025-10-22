@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 env:
   NODE_ENV: test
@@ -30,7 +31,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: invaderlegends5-cpu/latch-apps
-          path: apps/latch-auth
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Bun
@@ -50,12 +50,12 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        working-directory: apps/latch-auth
+        working-directory: ./apps/latch-auth
         run: bun install --frozen-lockfile
 
       # 🟣 Run Jest Unit Tests + Export JUnit Results
       - name: Run Unit Tests
-        working-directory: apps/latch-auth
+        working-directory: ./apps/latch-auth
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
           bunx jest --ci --no-colors \
