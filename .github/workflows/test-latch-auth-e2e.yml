@@ -77,11 +77,11 @@ jobs:
             ${{ runner.os }}-bun-
 
       - name: Install Dependencies
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: bun install --frozen-lockfile
 
       - name: Generate Prisma Client
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: bunx prisma generate
 
       - name: Wait for PostgreSQL Service
@@ -93,15 +93,15 @@ jobs:
           done
 
       - name: Apply Prisma Migrations
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: bunx prisma migrate deploy
 
       - name: Run Prisma Seed (Mock)
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: bunx prisma db seed || echo "Seed skipped (already populated)"
 
       - name: Verify Seed Presence
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: |
           CNT=$(bunx prisma db execute --url "${{ env.DATABASE_URL }}" --file <(echo "SELECT COUNT(*) AS cnt FROM \"Tenant\";") | grep -Eo '[0-9]+')
           if [ -z "$CNT" ] || [ "$CNT" -eq 0 ]; then
@@ -111,7 +111,7 @@ jobs:
           echo "✅ Mock seed verified — $CNT tenants exist."
 
       - name: Run E2E Tests with Coverage
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
           timeout 300s bun test:e2e --ci --no-colors \
@@ -120,7 +120,7 @@ jobs:
             --coverageDirectory=coverage || (echo "❌ E2E tests failed or timed out!" && exit 1)
 
       - name: Build Docker Image (Prod-like)
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: docker build --no-cache -t latch-auth:e2e -f Dockerfile .
 
       - name: Run Latch Auth Docker Container
@@ -160,7 +160,7 @@ jobs:
 
       - name: Generate E2E + Coverage Summary
         id: summary
-        working-directory: apps/latch-auth
+        working-directory: ./latch-apps/apps/latch-auth
         run: |
           TEST_SUMMARY="❌ E2E test results not found"
           if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
