@@ -21,7 +21,7 @@ describe('Auth Lifecycle (E2E)', () => {
 
   it('should complete OTP -> verify -> logout flow correctly', async () => {
     const otpRes = await request(app.getHttpServer())
-      .post('/v1/auth//v1/auth/request-otp')
+      .post('/v1/auth/request-otp')
       .send({ phone: '+15551234567' });
 
     expect(otpRes.status).toBe(201);

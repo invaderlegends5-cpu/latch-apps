@@ -11,6 +11,7 @@ import { EventLogService } from './events/event.service';
 import { EventsModule } from './events/events.module';
 import { SecurityModule } from './security/security.module';
 import { HealthModule } from './health/health.module';
+import { AppService } from './app.service';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -45,6 +46,7 @@ import { HealthModule } from './health/health.module';
     HealthModule,
   ],
    providers: [PrismaService,
+    AppService
     //  EventLogService
     ],
 })
