@@ -130,14 +130,23 @@ jobs:
 
       - name: Run Latch Auth Docker Container
         run: |
+          # Get the auto-created network name
+          NETWORK=$(docker network ls --format '{{.Name}}' | grep github_network)
+          
           docker run -d --rm --name latch_auth_test -p 3000:3000 \
+            --network "$NETWORK" \
             -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
-            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            -e EVENT_SIGNING_SECRET="mock-signing-secret" \
+            -e NODE_ENV=test \
             latch-auth:e2e
+      
           echo "Waiting for Latch Auth API to boot..."
           for i in {1..40}; do
-            curl -fsS http://localhost:3000/v1/health >/dev/null 2>&1 && echo "✅ Latch Auth API healthy!" && break
+            if curl -fsS http://localhost:3000/v1/health >/dev/null 2>&1; then
+              echo "✅ Latch Auth API healthy!"
+              break
+            fi
             sleep 2
           done
 
