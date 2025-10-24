@@ -131,8 +131,8 @@ jobs:
       - name: Run Latch Auth Docker Container
         run: |
           docker run -d --rm --name latch_auth_test -p 3000:3000 \
-            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
-            -e REDIS_URL="${{ env.REDIS_URL }}" \
+            -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
+            -e REDIS_URL="redis://redis:6379" \
             -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
             latch-auth:e2e
           echo "Waiting for Latch Auth API to boot..."
