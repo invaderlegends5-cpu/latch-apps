@@ -172,29 +172,32 @@ jobs:
             apps/latch-auth/junit.xml
           if-no-files-found: ignore
 
+      - name: Install xmllint (for parsing JUnit XML)
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+        
       - name: Generate E2E + Coverage Summary
         id: summary
         working-directory: ./latch-apps/apps/latch-auth
         run: |
-          TEST_SUMMARY="❌ E2E test results not found"
-          if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
-            TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
-            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
-            if [ "$FAILURES" -eq 0 ]; then
-              TEST_SUMMARY="✅ E2E tests passed ($TOTAL tests)"
-            else
-              TEST_SUMMARY="❌ E2E tests failed: $FAILURES/$TOTAL failed"
+            TEST_SUMMARY="❌ E2E test results not found"
+            if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
+              TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+              FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+              if [ "$FAILURES" -eq 0 ]; then
+                TEST_SUMMARY="✅ E2E tests passed ($TOTAL tests)"
+              else
+                TEST_SUMMARY="❌ E2E tests failed: $FAILURES/$TOTAL failed"
+              fi
             fi
-          fi
-
-          COVERAGE_SUMMARY="❌ Coverage not found"
-          if [ -f "coverage/lcov-report/index.html" ]; then
-            COVERAGE=$(grep -o 'Lines.*[0-9]\+%' coverage/lcov-report/index.html | head -1 || echo "Coverage data available")
-            COVERAGE_SUMMARY="📊 Coverage: $COVERAGE"
-          fi
-
-          SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
-          echo "::set-output name=text::$SUMMARY"
+        
+            COVERAGE_SUMMARY="❌ Coverage not found"
+            if [ -f "coverage/lcov-report/index.html" ]; then
+              COVERAGE=$(grep -o 'Lines.*[0-9]\+%' coverage/lcov-report/index.html | head -1 || echo "Coverage data available")
+              COVERAGE_SUMMARY="📊 Coverage: $COVERAGE"
+            fi
+        
+            SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
+            echo "::set-output name=text::$SUMMARY"
 
       - name: Cleanup Docker Containers
         if: always()
