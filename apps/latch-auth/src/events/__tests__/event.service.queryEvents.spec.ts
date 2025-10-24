@@ -4,15 +4,13 @@ import { ConfigService } from '@nestjs/config';
 
 describe('EventLogService.queryEvents', () => {
   let service: EventLogService;
-  let mockPrisma: Partial<PrismaService>;
+  let mockPrisma: any;
   let mockConfig: Partial<ConfigService>;
 
   beforeEach(() => {
     mockPrisma = {
       event: {
-        findMany: jest
-          .fn()
-          .mockResolvedValue([{ id: '1', type: 'LOGIN_SUCCESS' }]),
+        findMany: jest.fn().mockResolvedValue([{ id: '1', type: 'LOGIN_SUCCESS' }]),
         count: jest.fn().mockResolvedValue(1),
       },
       user: { findMany: jest.fn().mockResolvedValue([]) },
