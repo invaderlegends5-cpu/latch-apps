@@ -137,7 +137,7 @@ jobs:
             POSTGRES_DB: latch_auth       # ← was 'latchdb'
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U latch -d latch_auth"  # ← update too
+          --health-cmd="pg_isready -U latch -d latch_auth"  
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
