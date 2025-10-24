@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { DevOtpStore } from '../utils/dev-otp-store';
+import { DevOtpStore } from '../../src/utils/dev-otp-store';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import cookieParser from 'cookie-parser';
 
@@ -62,8 +62,9 @@ describe('Auth Lifecycle (E2E)', () => {
 
     // 4. Extract cookies for logout
     const cookies = verifyRes.headers['set-cookie'];
-    const cookieArray = Array.isArray(cookies) ? cookies : [cookies];
-    const cookieHeader = cookieArray.map(c => c.split(';')[0]).join('; ');
+    const cookieHeader = (Array.isArray(cookies) ? cookies : [cookies])
+      .map(c => c.split(';')[0])
+      .join('; ');
 
     // 5. Logout with all required context
     const logoutRes = await request(app.getHttpServer())

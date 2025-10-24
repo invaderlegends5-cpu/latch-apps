@@ -10,7 +10,7 @@ import { hashToken } from './utils/hash.util';
 import { EventLogService } from '../events/event.service';
 import { PrismaError } from './types/auth.types';
 import { RefreshToken, Session } from '@prisma/client';
-import { DevOtpStore } from '../../test/utils/dev-otp-store';
+import { DevOtpStore } from '../utils/dev-otp-store';
 type RequestContext = {
   ipAddress?: string | null;
   userAgent?: string | null;
