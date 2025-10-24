@@ -187,7 +187,9 @@ jobs:
 
       - name: Run Prisma Seed (Mock)
         working-directory: apps/latch-auth
-        run: run prisma:seed || echo "Seed skipped (already populated)"
+        run: 
+          echo "Running Prisma seed..."
+          bun run prisma:seed
 
       - name: Verify Seed Presence
         working-directory: apps/latch-auth
