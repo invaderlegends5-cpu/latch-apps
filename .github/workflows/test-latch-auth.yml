@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: invaderlegends5-cpu/latch-apps
-          path: latch-apps
+          # path: latch-apps
       - name: Setup Bun Runtime
         uses: oven-sh/setup-bun@v1
         with:
