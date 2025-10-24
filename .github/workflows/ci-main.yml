@@ -212,12 +212,11 @@ jobs:
 
       - name: Run Latch Auth Docker Container
         run: |
-          # Get the auto-created network name
           NETWORK=$(docker network ls --format '{{.Name}}' | grep github_network)
-      
+          
           docker run -d --rm --name latch_auth_test -p 3000:3000 \
             --network "$NETWORK" \
-            -e DATABASE_URL="postgresql://latch:latch123@localhost:5432/latch_auth" \
+            -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
             -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
             -e NODE_ENV=test \
