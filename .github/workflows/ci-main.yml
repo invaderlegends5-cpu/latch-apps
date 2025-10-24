@@ -21,7 +21,7 @@ permissions:
 env:
   NODE_ENV: test
   CI_ARTIFACT_PATH: latch-auth-ci-artifacts
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  DATABASE_URL: postgresql://latch:latch123@localhost:5432/latch_auth
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   AWS_REGION: us-east-1
