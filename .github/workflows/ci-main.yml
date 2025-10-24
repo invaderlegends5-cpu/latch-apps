@@ -182,14 +182,9 @@ jobs:
         working-directory: apps/latch-auth
         run: bunx prisma migrate deploy
 
-      - name: Wait briefly after migrations
-        run: sleep 3
-
       - name: Run Prisma Seed (Mock)
         working-directory: apps/latch-auth
-        run: 
-          echo "Running Prisma seed..."
-          bun run prisma:seed
+        run: bun prisma db seed || echo "Seed skipped (already populated)"
 
       - name: Verify Seed Presence
         working-directory: apps/latch-auth
