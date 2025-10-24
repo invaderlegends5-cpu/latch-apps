@@ -137,13 +137,13 @@ jobs:
             latch-auth:e2e
           echo "Waiting for Latch Auth API to boot..."
           for i in {1..40}; do
-            curl -fsS http://localhost:3000/health >/dev/null 2>&1 && echo "✅ Latch Auth API healthy!" && break
+            curl -fsS http://localhost:3000/v1/health >/dev/null 2>&1 && echo "✅ Latch Auth API healthy!" && break
             sleep 2
           done
 
       - name: Health Check (/health)
         run: |
-          curl -f http://localhost:3000/health || (echo "❌ Health check failed!" && exit 1)
+          curl -f http://localhost:3000/v1/health || (echo "❌ Health check failed!" && exit 1)
           echo '{"health":"ok","checkedAt":"'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"}' > ${{ env.CI_ARTIFACT_PATH }}/health.json || true
 
       - name: Upload Coverage Artifact
