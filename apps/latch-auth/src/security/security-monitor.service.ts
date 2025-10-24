@@ -57,6 +57,14 @@ export class SecurityMonitoringService
   }
 
   onModuleInit() {
+
+    if (!this.events?.event$) {
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.warn('EventLogService not initialized, skipping subscription');
+      }
+      return;
+    }
+    
     this.events.event$.subscribe((event: SecurityEvent) =>
       this.handleEvent(event),
     );

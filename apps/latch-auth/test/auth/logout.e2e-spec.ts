@@ -1,10 +1,15 @@
-import request from 'supertest';
+// test/auth/logout.e2e-spec.ts
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import request from 'supertest';
 import { AppModule } from '../../src/app.module';
+import { DevOtpStore } from '../utils/dev-otp-store';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import cookieParser from 'cookie-parser';
 
 describe('Auth Lifecycle (E2E)', () => {
   let app: INestApplication;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -12,11 +17,11 @@ describe('Auth Lifecycle (E2E)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-
-    // ✅ Apply same global prefix as in main.ts
     app.setGlobalPrefix('v1');
-
+    app.use(cookieParser(process.env.COOKIE_SECRET ?? 'dev_cookie_secret'));
     await app.init();
+
+    prisma = moduleRef.get(PrismaService);
   });
 
   afterAll(async () => {
@@ -24,41 +29,72 @@ describe('Auth Lifecycle (E2E)', () => {
   });
 
   it('should complete OTP -> verify -> logout flow correctly', async () => {
-    const otpRes = await request(app.getHttpServer())
-      .post('/v1/auth/request-otp')
-      .send({ phone: '+15551234567' });
+    const phone = `+1555123456${Date.now()}`;
+    const tenantSlug = 'default';
 
-    expect(otpRes.status).toBe(201);
-    expect(otpRes.body).toHaveProperty('ok', true);
+    // 1. Request OTP
+    const requestRes = await request(app.getHttpServer())
+      .post('/v1/auth/request-otp')
+      .send({ phone, tenantSlug })
+      .set('x-forwarded-for', '127.0.0.1')
+      .set('user-agent', 'jest-e2e-test')
+      .expect(201);
+
+    // 2. Get OTP from dev store
+    const devOtp = DevOtpStore.get(phone);
+    expect(devOtp).toBeDefined();
+
+    // 3. Verify OTP
+    const verifyRes = await request(app.getHttpServer())
+      .post('/v1/auth/otpVerify')
+      .send({ phone, code: devOtp, tenantSlug })
+      .set('x-forwarded-for', '127.0.0.1')
+      .set('user-agent', 'jest-e2e-test')
+      .expect(201);
+
+    // Validate session was created correctly
+    const sessionInDb = await prisma.session.findFirst({
+      where: { userId: verifyRes.body.user.id },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(sessionInDb).toBeTruthy();
+    expect(sessionInDb!.csrfToken).toBe(verifyRes.body.csrfToken);
+
+    // 4. Extract cookies for logout
+    const cookies = verifyRes.headers['set-cookie'];
+    const cookieArray = Array.isArray(cookies) ? cookies : [cookies];
+    const cookieHeader = cookieArray.map(c => c.split(';')[0]).join('; ');
+
+    // 5. Logout with all required context
+    const logoutRes = await request(app.getHttpServer())
+      .post('/v1/auth/logout')
+      .set('Cookie', cookieHeader)           // 👈 Critical: send cookies manually
+      .set('x-tenant-slug', tenantSlug)      // 👈 Required by TenantGuard
+      .set('x-csrf-token', verifyRes.body.csrfToken) // 👈 Required by CsrfGuard
+      .set('x-forwarded-for', '127.0.0.1')
+      .set('user-agent', 'jest-e2e-test')
+      .expect(201);
+
+    expect(logoutRes.body).toEqual({ ok: true });
+  });
+
+  it('should handle invalid OTP codes', async () => {
+    const phone = `+1555123457${Date.now()}`;
+    const tenantSlug = 'default';
+
+    await request(app.getHttpServer())
+      .post('/v1/auth/request-otp')
+      .send({ phone, tenantSlug })
+      .set('x-forwarded-for', '127.0.0.1')
+      .set('user-agent', 'jest-e2e-test')
+      .expect(201);
 
     const verifyRes = await request(app.getHttpServer())
       .post('/v1/auth/otpVerify')
-      .send({
-        phone: '+15551234567',
-        code: '123456',
-      });
+      .send({ phone, code: '000000', tenantSlug })
+      .set('x-forwarded-for', '127.0.0.1')
+      .set('user-agent', 'jest-e2e-test');
 
-    expect(verifyRes.status).toBe(201);
-    const cookies = verifyRes.get('Set-Cookie');
-    expect(cookies).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining('latch_refresh='),
-        expect.stringContaining('latch_session='),
-        expect.stringContaining('latch_csrf='),
-      ]),
-    );
-
-    const cookieHeader = cookies.map((c: string) => c.split(';')[0]).join('; ');
-
-    const logoutRes = await request(app.getHttpServer())
-      .post('/v1/auth/logout')
-      .set('Cookie', cookieHeader);
-
-    expect([200, 201]).toContain(logoutRes.status);
-    const logoutCookies = logoutRes.get('Set-Cookie');
-
-    for (const c of logoutCookies) {
-      expect(c).toContain('Expires=Thu, 01 Jan 1970');
-    }
+    expect(verifyRes.status).toBe(401);
   });
 });

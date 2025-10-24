@@ -276,6 +276,17 @@ export class CsrfGuard implements CanActivate {
     let headerToken: string | undefined;
     let xsrfToken: string | undefined;
 
+    console.log('🔍 CSRF Guard Debug:', {
+      url: req.url,
+      method: req.method,
+      hasXCsrf: !!req.headers['x-csrf-token'],
+      xCsrf: req.headers['x-csrf-token'],
+      hasLatchCsrfCookie: !!req.cookies?.['latch_csrf'],
+      latchCsrfCookie: req.cookies?.['latch_csrf'],
+      hasLatchSessionCookie: !!req.cookies?.['latch_session'],
+      latchSessionCookie: req.cookies?.['latch_session'],
+    });
+
     // Normalize x-csrf-token
     if (Array.isArray(rawHeaderToken)) {
       if (rawHeaderToken.length > 1) {

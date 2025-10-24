@@ -133,6 +133,7 @@ export class AuthController {
     @Req() req: authTypes.RequestWithCookies,
     @Res({ passthrough: true }) res: express.Response,
   ) {
+    console.log('✅ AuthController.logout HIT');
     const sessionId = req.cookies['latch_session']; // ← Read cookies FIRST
     let userId: string | null = null;
     let tenantId: string | null = null;

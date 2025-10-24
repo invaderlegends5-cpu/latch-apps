@@ -10,7 +10,7 @@ import { hashToken } from './utils/hash.util';
 import { EventLogService } from '../events/event.service';
 import { PrismaError } from './types/auth.types';
 import { RefreshToken, Session } from '@prisma/client';
-
+import { DevOtpStore } from '../../test/utils/dev-otp-store';
 type RequestContext = {
   ipAddress?: string | null;
   userAgent?: string | null;
@@ -50,9 +50,14 @@ export class AuthService {
       });
     }
 
+    
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = crypto.createHash('sha256').update(code).digest('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 15); // 15m
+
+    if (process.env.NODE_ENV === 'test') {
+      DevOtpStore.set(phone, code);
+    }
 
     await this.prisma.oTP.create({
       data: {

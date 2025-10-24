@@ -1,7 +1,7 @@
 // test/health.e2e-spec.ts
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
-process.env.DATABASE_URL = 'postgresql://latch:latch123@localhost:5432/latch_auth';
+//process.env.DATABASE_URL = 'postgresql://latch:latch123@localhost:5432/latch_auth';
 
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
