@@ -132,12 +132,12 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: latchdb
+            POSTGRES_USER: latch          # ← was 'postgres'
+            POSTGRES_PASSWORD: latch123   # ← was 'postgres'
+            POSTGRES_DB: latch_auth       # ← was 'latchdb'
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-cmd="pg_isready -U latch -d latch_auth"  # ← update too
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
