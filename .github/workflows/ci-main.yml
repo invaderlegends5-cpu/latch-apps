@@ -97,7 +97,7 @@ jobs:
               AWS_REGION: us-east-1
         run: |
               bun install --frozen-lockfile
-              mkdir -p $CI_ARTIFACT_PATH       # ← must be before jest
+              mkdir -p $CI_ARTIFACT_PATH       
               npx jest --ci --no-colors \
                 --reporters=default \
                 --reporters=jest-junit \
