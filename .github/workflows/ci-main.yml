@@ -95,7 +95,7 @@ jobs:
             REDIS_URL: redis://localhost:6379
             EVENT_SIGNING_SECRET: mock-signing-secret
             AWS_REGION: us-east-1
-          run: |
+        run: |
             bun install --frozen-lockfile
             mkdir -p $CI_ARTIFACT_PATH
             bunx jest --ci --no-colors \
