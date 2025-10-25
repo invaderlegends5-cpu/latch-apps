@@ -59,9 +59,9 @@ jobs:
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
           bunx jest --ci --no-colors \
-            --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
-            --reporters=default \
-            --reporters=jest-junit
+          --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
+          --reporters=default \
+          --reporters=jest-junit
 
       - name: Upload Unit Test Results
         if: always()
