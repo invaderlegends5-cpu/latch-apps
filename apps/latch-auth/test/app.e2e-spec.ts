@@ -15,11 +15,6 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    afterAll(async () => {
-      await app.close();
-      });
-    
-
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('v1');
     await app.init();
@@ -39,3 +34,7 @@ describe('AppController (e2e)', () => {
       .expect(404); // If no root route is defined, 404 is correct
   });
 });
+
+afterAll(async () => {
+  await app.close();
+  });
