@@ -9,7 +9,9 @@ on:
 
 permissions:
   contents: read
-
+  checks: write
+  pull-requests: write
+  
 env:
   AWS_REGION: us-east-1
   DATABASE_URL: postgresql://latch:latch123@localhost:5432/latch_auth
