@@ -111,9 +111,10 @@ jobs:
       - name: Generate Unit Test Summary
         id: summary
         run: |
-          if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
-            TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
-            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
+          JUNIT_FILE=apps/latch-auth/${{ env.CI_ARTIFACT_PATH }}/junit.xml
+          if [ -f "$JUNIT_FILE" ]; then
+            TOTAL=$(xmllint --xpath 'string(count(//testcase))' $JUNIT_FILE)
+            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' $JUNIT_FILE)
             COVERAGE=$(grep -oP 'Lines.*\K[0-9]+' coverage/unit/lcov-report/index.html || echo 0)
             if [ "$FAILURES" -eq 0 ]; then
               SUMMARY="✅ Unit tests passed ($TOTAL tests) | Coverage: ${COVERAGE}%"
