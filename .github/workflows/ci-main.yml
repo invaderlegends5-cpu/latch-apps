@@ -55,7 +55,6 @@ jobs:
 
       - name: Generate Lint Summary
         id: summary
-        working-directory: apps/latch-auth
         run: |
           ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet | wc -l || echo 0)
           if [ "$ERR_COUNT" -eq 0 ]; then
@@ -129,6 +128,7 @@ jobs:
 
     - name: Generate Unit Test Summary
       id: summary
+      working-directory: apps/latch-auth
       run: |
           if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
             TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
