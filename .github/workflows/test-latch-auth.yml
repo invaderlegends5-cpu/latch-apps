@@ -11,7 +11,7 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
-  
+
 env:
   AWS_REGION: us-east-1
   DATABASE_URL: postgresql://latch:latch123@localhost:5432/latch_auth
@@ -31,9 +31,8 @@ jobs:
           PPOSTGRES_USER: latch
           POSTGRES_PASSWORD: latch123
           POSTGRES_DB: latch_auth
-        ports:
-          - 5432:5432
-        options: >-
+        ports: ["5432:5432"]
+         options: >-
           --health-cmd="pg_isready -U latch -d latch_auth
           --health-interval=10s
           --health-timeout=5s
