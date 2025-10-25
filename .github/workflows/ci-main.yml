@@ -90,12 +90,14 @@ jobs:
         run: |
           bun install --frozen-lockfile
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
-          bunx jest --ci --no-colors \
-            --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
-            --reporters=default \
-            --reporters=jest-junit \
-            --coverage \
-            --coverageDirectory=coverage/unit
+          env:
+            JEST_JUNIT_OUTPUT: ${{ env.CI_ARTIFACT_PATH }}/junit.xml
+            run: |
+            bunx jest --ci --no-colors \
+              --reporters=default \
+              --reporters=jest-junit \
+              --coverage \
+              --coverageDirectory=coverage/unit
 
       - name: Generate Unit Test Summary
         id: summary
@@ -112,7 +114,7 @@ jobs:
           else
             SUMMARY="❌ Unit test results not found"
           fi
-          echo "::set-output name=text::$SUMMARY"
+          echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Upload Unit Test Results
         if: always()
@@ -261,8 +263,17 @@ jobs:
         run: |
           UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -oP '\d+' || echo 0)
           E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -oP '\d+' || echo 0)
-          AVG_COV=$(( (UNIT_COV + E2E_COV) / 2 ))
-          echo "::set-output name=coverage::$AVG_COV%"
+          - name: Compute Overall Coverage
+            id: overall
+            run: |
+            UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -oP '\d+' | head -1 || echo 0)
+            E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -oP '\d+' | head -1 || echo 0)
+            UNIT_COV=${UNIT_COV:-0}
+            E2E_COV=${E2E_COV:-0}
+            AVG_COV=$(( (UNIT_COV + E2E_COV) / 2 ))
+            echo "Computed average coverage: $AVG_COV%"
+            echo "coverage=$AVG_COV%" >> $GITHUB_OUTPUT
+            echo "::set-output name=coverage::$AVG_COV%"
 
       - name: Post unified PR comment
         uses: marocchino/sticky-pull-request-comment@v2
