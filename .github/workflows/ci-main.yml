@@ -82,50 +82,53 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
-      
+      redis:  # ← ADD THIS
+        image: redis:7
+        ports: ["6379:6379"]
     outputs:
       unit-summary: ${{ steps.summary.outputs.text }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
 
-      - name: Install & Run Unit Tests
-        working-directory: apps/latch-auth
-        env:
-            NODE_ENV: test
-            CI_ARTIFACT_PATH: latch-auth-ci-artifacts
-            JEST_JUNIT_OUTPUT: latch-auth-ci-artifacts/junit.xml   # ← relative to working-directory
-            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latch_auth
-            REDIS_URL: redis://localhost:6379
-            EVENT_SIGNING_SECRET: mock-signing-secret
-            AWS_REGION: us-east-1
-        run: |
-            mkdir -p latch-auth-ci-artifacts
-            bun install --frozen-lockfile
-            bunx jest --ci --no-colors \
-              --reporters=default \
-              --reporters=jest-junit \
-              --coverage \
-              --coverageDirectory=coverage/unit
+    - name: Install & Run Unit Tests
+      working-directory: apps/latch-auth
+      env:
+        NODE_ENV: test
+        CI_ARTIFACT_PATH: latch-auth-ci-artifacts
+        JEST_JUNIT_OUTPUT: latch-auth-ci-artifacts/junit.xml
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latch_auth
+        REDIS_URL: redis://localhost:6379
+        EVENT_SIGNING_SECRET: mock-signing-secret
+        AWS_REGION: us-east-1
+      run: |
+        mkdir -p latch-auth-ci-artifacts
+        bun install --frozen-lockfile
+        bunx prisma generate  # ← ADD THIS
+        bunx jest --ci --no-colors \
+          --reporters=default \
+          --reporters=jest-junit \
+          --coverage \
+          --coverageDirectory=coverage/unit
 
-      - name: Debug test output files
-        working-directory: apps/latch-auth
-        run: |
-            ls -laR latch-auth-ci-artifacts || echo "Directory not found"
-            ls -la coverage/unit || echo "Coverage not found"    
+    - name: Debug test output files
+      working-directory: apps/latch-auth
+      run: |
+          ls -laR latch-auth-ci-artifacts || echo "Directory not found"
+          ls -la coverage/unit || echo "Coverage not found"    
 
-      - name: Debug JUnit XML
-        working-directory: apps/latch-auth
-        run: ls -l $CI_ARTIFACT_PATH
+    - name: Debug JUnit XML
+      working-directory: apps/latch-auth
+      run: ls -l $CI_ARTIFACT_PATH
 
-      - name: Generate Unit Test Summary
-        id: summary
-        run: |
+    - name: Generate Unit Test Summary
+      id: summary
+      run: |
           if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
             TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
             FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
@@ -140,10 +143,10 @@ jobs:
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
-      - name: Upload Unit Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
+    - name: Upload Unit Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
           name: latch-auth-unit-results
           path: ${{ env.CI_ARTIFACT_PATH }}/junit.xml
           if-no-files-found: ignore
