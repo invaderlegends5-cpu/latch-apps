@@ -87,12 +87,17 @@ jobs:
 
       - name: Install & Run Unit Tests
         working-directory: apps/latch-auth
-        run: |
-          bun install --frozen-lockfile
-          mkdir -p ${{ env.CI_ARTIFACT_PATH }}
-          env:
-            JEST_JUNIT_OUTPUT: ${{ env.CI_ARTIFACT_PATH }}/junit.xml
-            run: |
+        env:
+            NODE_ENV: test
+            CI_ARTIFACT_PATH: latch-auth-ci-artifacts
+            JEST_JUNIT_OUTPUT: latch-auth-ci-artifacts/junit.xml
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latch_auth
+            REDIS_URL: redis://localhost:6379
+            EVENT_SIGNING_SECRET: mock-signing-secret
+            AWS_REGION: us-east-1
+          run: |
+            bun install --frozen-lockfile
+            mkdir -p $CI_ARTIFACT_PATH
             bunx jest --ci --no-colors \
               --reporters=default \
               --reporters=jest-junit \
