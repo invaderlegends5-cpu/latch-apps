@@ -103,12 +103,12 @@ jobs:
       - name: Run Latch Auth API (Background)
         run: |
           docker run -d --name latch_auth_test \
-            --link postgres:postgres \
-            --link redis:redis \
+            --network "$NETWORK" \
             -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
-            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            -e EVENT_SIGNING_SECRET="mock-signing-secret" \
             -e NODE_ENV="test" \
+            -p 3000:3000 \
             latch-auth:test
       
           echo "Waiting for Latch Auth API to boot..."
