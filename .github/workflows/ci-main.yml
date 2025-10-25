@@ -105,22 +105,24 @@ jobs:
               --coverage \
               --coverageDirectory=coverage/unit
 
-      - name: Generate Unit Test Summary
-        id: summary
-        run: |
-          if [ -f "${{ env.CI_ARTIFACT_PATH }}/junit.xml" ]; then
-            TOTAL=$(xmllint --xpath 'string(count(//testcase))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
-            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' ${{ env.CI_ARTIFACT_PATH }}/junit.xml)
-            COVERAGE=$(grep -oP 'Lines.*\K[0-9]+' coverage/unit/lcov-report/index.html || echo 0)
-            if [ "$FAILURES" -eq 0 ]; then
-              SUMMARY="✅ Unit tests passed ($TOTAL tests) | Coverage: ${COVERAGE}%"
-            else
-              SUMMARY="❌ Unit tests failed: $FAILURES/$TOTAL failed | Coverage: ${COVERAGE}%"
-            fi
-          else
-            SUMMARY="❌ Unit test results not found"
-          fi
-          echo "text=$SUMMARY" >> $GITHUB_OUTPUT
+              - name: Generate Unit Test Summary
+              id: summary
+              working-directory: apps/latch-auth
+              run: |
+                FILE="${CI_ARTIFACT_PATH}/junit.xml"
+                if [ -f "$FILE" ]; then
+                  TOTAL=$(xmllint --xpath 'string(count(//testcase))' "$FILE")
+                  FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' "$FILE")
+                  COVERAGE=$(grep -oP 'Lines.*\K[0-9]+' coverage/unit/lcov-report/index.html || echo 0)
+                  if [ "$FAILURES" -eq 0 ]; then
+                    SUMMARY="✅ Unit tests passed ($TOTAL tests) | Coverage: ${COVERAGE}%"
+                  else
+                    SUMMARY="❌ Unit tests failed: $FAILURES/$TOTAL failed | Coverage: ${COVERAGE}%"
+                  fi
+                else
+                  SUMMARY="❌ Unit test results not found"
+                fi
+                echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Upload Unit Test Results
         if: always()
