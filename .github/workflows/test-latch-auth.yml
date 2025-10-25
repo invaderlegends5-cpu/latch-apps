@@ -102,6 +102,7 @@ jobs:
 
       - name: Run Latch Auth API (Background)
         run: |
+          NETWORK=$(docker network ls --format '{{.Name}}' | grep github_network)
           docker run -d --name latch_auth_test \
             --network "$NETWORK" \
             -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
