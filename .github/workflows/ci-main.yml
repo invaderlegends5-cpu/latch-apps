@@ -269,16 +269,23 @@ jobs:
           UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -oP '\d+' || echo 0)
           E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -oP '\d+' || echo 0)
           - name: Compute Overall Coverage
-            id: overall
-            run: |
-            UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -oP '\d+' | head -1 || echo 0)
-            E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -oP '\d+' | head -1 || echo 0)
-            UNIT_COV=${UNIT_COV:-0}
-            E2E_COV=${E2E_COV:-0}
-            AVG_COV=$(( (UNIT_COV + E2E_COV) / 2 ))
-            echo "Computed average coverage: $AVG_COV%"
-            echo "coverage=$AVG_COV%" >> $GITHUB_OUTPUT
-            echo "::set-output name=coverage::$AVG_COV%"
+          id: overall
+          env:
+          NODE_ENV: test
+          CI_ARTIFACT_PATH: latch-auth-ci-artifacts
+          DATABASE_URL: postgresql://localhost:5432/latch_auth
+          REDIS_URL: redis://localhost:6379
+          EVENT_SIGNING_SECRET: mock-signing-secret
+          AWS_REGION: us-east-1
+          run: |
+          UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -oP '\d+' | head -1 || echo 0)
+          E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -oP '\d+' | head -1 || echo 0)
+          UNIT_COV=${UNIT_COV:-0}
+          E2E_COV=${E2E_COV:-0}
+          AVG_COV=$(( (UNIT_COV + E2E_COV) / 2 ))
+          echo "Computed average coverage: $AVG_COV%"
+          echo "coverage=$AVG_COV%" >> $GITHUB_OUTPUT
+
 
       - name: Post unified PR comment
         uses: marocchino/sticky-pull-request-comment@v2
