@@ -126,6 +126,9 @@ jobs:
       working-directory: apps/latch-auth
       run: ls -l $CI_ARTIFACT_PATH
 
+    - name: Install xmllint
+      run: sudo apt-get install -y libxml2-utils
+
     - name: Generate Unit Test Summary
       id: summary
       working-directory: apps/latch-auth
