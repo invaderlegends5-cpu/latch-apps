@@ -267,7 +267,7 @@ jobs:
     name: Post Unified CI Summary to PR
     runs-on: ubuntu-latest
     needs: [lint-typecheck, unit, e2e]
-    if: github.event_name == 'pull_request'
+    
     steps:
     - name: Compute Overall Coverage
       id: overall
