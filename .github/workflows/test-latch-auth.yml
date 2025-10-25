@@ -28,12 +28,12 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          PPOSTGRES_USER: latch
+          POSTGRES_USER: latch
           POSTGRES_PASSWORD: latch123
           POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U latch -d latch_auth
+          --health-cmd="pg_isready -U latch -d latch_auth"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -78,7 +78,7 @@ jobs:
 
       - name: Run Prisma Seed (Mock)
         working-directory: apps/latch-auth
-        run: bunx prisma db seed || echo "Seed skipped (no seed script found)"
+        run: bun run prisma:seed
 
       # 🧠 Verify seed data actually exists
       - name: Verify Seed Presence
