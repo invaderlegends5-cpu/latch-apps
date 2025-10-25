@@ -32,7 +32,7 @@ jobs:
           POSTGRES_PASSWORD: latch123
           POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
-         options: >-
+        options: >-
           --health-cmd="pg_isready -U latch -d latch_auth
           --health-interval=10s
           --health-timeout=5s
