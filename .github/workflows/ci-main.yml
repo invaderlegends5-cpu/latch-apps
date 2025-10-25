@@ -55,6 +55,7 @@ jobs:
 
       - name: Generate Lint Summary
         id: summary
+        working-directory: apps/latch-auth
         run: |
           ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet | wc -l || echo 0)
           if [ "$ERR_COUNT" -eq 0 ]; then
