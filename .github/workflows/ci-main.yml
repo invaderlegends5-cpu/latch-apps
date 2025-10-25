@@ -99,6 +99,7 @@ jobs:
             bun install --frozen-lockfile
             mkdir -p $CI_ARTIFACT_PATH
             bunx jest --ci --no-colors \
+              --outputFile=$CI_ARTIFACT_PATH/junit.xml \
               --reporters=default \
               --reporters=jest-junit \
               --coverage \
