@@ -33,8 +33,8 @@ describe('AppController (e2e)', () => {
       .get('/v1')
       .expect(404); // If no root route is defined, 404 is correct
   });
+  afterAll(async () => {
+    await app.close();
+    });
 });
 
-afterAll(async () => {
-  await app.close();
-  });
