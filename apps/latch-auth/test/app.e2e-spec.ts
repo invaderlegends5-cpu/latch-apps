@@ -15,6 +15,11 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
+    afterAll(async () => {
+      await app.close();
+      });
+    
+
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('v1');
     await app.init();

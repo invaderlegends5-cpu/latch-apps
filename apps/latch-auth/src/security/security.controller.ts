@@ -15,7 +15,7 @@ import { AdminOnly } from '../auth/decorators/admin-only.decorator'; // ✅ Stat
 import { SecurityMonitoringService } from './security-monitor.service';
 import { EventLogService } from '../events/event.service';
 import { ChainVerificationResult } from '../events/event.types';
-@Controller('v1/security')
+@Controller('security')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard) // ✅ Full auth chain
 export class SecurityController {
   private readonly logger = new Logger(SecurityController.name);
