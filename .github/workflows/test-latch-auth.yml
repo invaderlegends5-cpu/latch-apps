@@ -12,7 +12,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  DATABASE_URL: postgresql://latch:latch123@localhost:5432/latch_auth
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   NODE_ENV: test
@@ -26,13 +26,13 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: latchdb
+          PPOSTGRES_USER: latch
+          POSTGRES_PASSWORD: latch123
+          POSTGRES_DB: latch_auth
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-cmd="pg_isready -U latch -d latch_auth
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -104,7 +104,7 @@ jobs:
           docker run -d --name latch_auth_test \
             --link postgres:postgres \
             --link redis:redis \
-            -e DATABASE_URL="postgresql://postgres:postgres@postgres:5432/latchdb" \
+            -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
             -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
             -e NODE_ENV="test" \
