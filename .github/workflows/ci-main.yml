@@ -226,7 +226,7 @@ jobs:
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
         run: |
-          mkdir -p ${{ env.CI_ARTIFACT_PATH }}
+          mkdir -p latch-auth-ci-artifacts
           timeout 300s bun test:e2e --ci --no-colors || (echo "❌ E2E tests failed!" && exit 1)
             
 
