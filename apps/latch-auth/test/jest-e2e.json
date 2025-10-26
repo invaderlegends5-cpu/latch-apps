@@ -20,6 +20,6 @@
     }]
   ],
   "collectCoverage": true,
-  "coverageDirectory": "../coverage/e2e",
+  "coverageDirectory": "<rootDir>/coverage/e2e",
   "collectCoverageFrom": ["src/**/*.ts"]
 }
