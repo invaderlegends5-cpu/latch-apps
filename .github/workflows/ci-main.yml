@@ -120,6 +120,9 @@ jobs:
         COV=$(grep -oP 'All files.*?\|\s+\K[0-9.]+(?=\s+\|)' test-output.log | head -1 | cut -d. -f1 || echo 0)
         echo "coverage=$COV" >> $GITHUB_OUTPUT
       
+    - name: Install xmllint
+      run: sudo apt-get update && sudo apt-get install -y libxml2-utils    
+
     - name: Generate Unit Test Summary
       id: summary
       working-directory: apps/latch-auth
