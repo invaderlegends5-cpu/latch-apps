@@ -224,7 +224,8 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           mkdir -p latch-auth-ci-artifacts
-          timeout 300s bun test:e2e --ci --no-colors --coverage || exit 1
+          - name: Run E2E tests with coverage
+            run: timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory coverage/e2e || exit 1
             
 
       - name: Build Docker Image (Prod-like)
@@ -271,9 +272,8 @@ jobs:
         with:
           name: latch-auth-e2e-results
           path: |
-            ${{ env.CI_ARTIFACT_PATH }}/*
+            latch-auth-ci-artifacts/*
             coverage/e2e
-          if-no-files-found: ignore
 
       - name: Generate E2E Summary
         id: summary
