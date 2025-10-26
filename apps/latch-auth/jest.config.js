@@ -17,6 +17,7 @@ module.exports = {
       },
     ],
   ],
+  collectCoverage: true,
   coverageDirectory: '<rootDir>/latch-auth-ci-artifacts/coverage',
   collectCoverageFrom: ['src/**/*.ts'],
   transformIgnorePatterns: ['node_modules'],

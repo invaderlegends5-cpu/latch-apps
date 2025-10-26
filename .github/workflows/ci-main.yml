@@ -108,11 +108,8 @@ jobs:
         mkdir -p latch-auth-ci-artifacts
         bun install --frozen-lockfile
         npx prisma generate
-        npx jest --ci --runInBand --no-colors \
-            --coverage \
-            --coverageDirectory=coverage/unit \
-            --coverageReporters=text-summary 2>&1 | tee test-output.log
-      
+        bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
+                  
     - name: Extract Coverage from Log
       id: coverage
       working-directory: apps/latch-auth
@@ -227,7 +224,7 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           mkdir -p latch-auth-ci-artifacts
-          timeout 300s bun test:e2e --ci --no-colors || (echo "❌ E2E tests failed!" && exit 1)
+          timeout 300s bun test:e2e --ci --no-colors --coverage || (echo "❌ E2E tests failed!" && exit 1)
             
 
       - name: Build Docker Image (Prod-like)
