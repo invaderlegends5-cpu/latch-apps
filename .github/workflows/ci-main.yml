@@ -291,53 +291,41 @@ jobs:
     needs: [lint-typecheck, unit, e2e]
     
     steps:
-    - name: Compute Overall Coverage
-      id: overall
-      env:
-        NODE_ENV: test
-        CI_ARTIFACT_PATH: latch-auth-ci-artifacts
-        DATABASE_URL: postgresql://localhost:5432/latch_auth
-        REDIS_URL: redis://localhost:6379
-        EVENT_SIGNING_SECRET: mock-signing-secret
-        AWS_REGION: us-east-1
-      run: |
-        UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -Eo '[0-9]+' | tail -1 || echo 0)
-        E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -Eo '[0-9]+' | tail -1 || echo 0)
+        - name: Compute Overall Coverage
+          id: overall
+          run: |
+            UNIT_COV=$(echo "${{ needs.unit.outputs.unit-summary }}" | grep -Eo '[0-9]+' | tail -1 || echo 0)
+            E2E_COV=$(echo "${{ needs.e2e.outputs.e2e-summary }}" | grep -Eo '[0-9]+' | tail -1 || echo 0)
+            UNIT_COV=${UNIT_COV:-0}
+            E2E_COV=${E2E_COV:-0}
+            if ! [[ "$UNIT_COV" =~ ^[0-9]+$ ]]; then UNIT_COV=0; fi
+            if ! [[ "$E2E_COV" =~ ^[0-9]+$ ]]; then E2E_COV=0; fi
+            AVG_COV=$(expr \( $UNIT_COV + $E2E_COV \) / 2)
+            echo "Computed average coverage: ${AVG_COV}%"
+            echo "coverage=${AVG_COV}%" >> $GITHUB_OUTPUT
 
-        # Fallbacks for safety
-        UNIT_COV=${UNIT_COV:-0}
-        E2E_COV=${E2E_COV:-0}
-
-        # Validate numeric values
-        if ! [[ "$UNIT_COV" =~ ^[0-9]+$ ]]; then UNIT_COV=0; fi
-        if ! [[ "$E2E_COV" =~ ^[0-9]+$ ]]; then E2E_COV=0; fi
-
-        AVG_COV=$(( (UNIT_COV + E2E_COV) / 2 ))
-
-        echo "Computed average coverage: ${AVG_COV}%"
-        echo "coverage=${AVG_COV}%" >> $GITHUB_OUTPUT
           
           
 
-    - name: Post unified PR comment
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
+        - name: Post unified PR comment
+          uses: marocchino/sticky-pull-request-comment@v2
+          with:
           #number: ${{ github.event.pull_request.number || '' }}
-          header: "## 🟣 CI Orchestrator Summary"
-          message: |
-            ### Lint / Typecheck
-            ${{ needs.lint-typecheck.outputs.lint-summary }}
+              header: "## 🟣 CI Orchestrator Summary"
+              message: |
+                ### Lint / Typecheck
+                ${{ needs.lint-typecheck.outputs.lint-summary }}
 
-            ### Unit Tests
-            ${{ needs.unit.outputs.unit-summary }}
+                ### Unit Tests
+                ${{ needs.unit.outputs.unit-summary }}
 
-            ### E2E + Coverage
-            ${{ needs.e2e.outputs.e2e-summary }}
+                ### E2E + Coverage
+                ${{ needs.e2e.outputs.e2e-summary }}
 
-            ### Overall Coverage
-            ${{ steps.overall.outputs.coverage }}
+                ### Overall Coverage
+                ${{ steps.overall.outputs.coverage }}
 
-            **Artifacts:**  
-            - Unit: latch-auth-unit-results  
-            - E2E Coverage & Results: latch-auth-e2e-results  
-            - Lint: ci-results-lint.json
+                **Artifacts:**  
+                - Unit: latch-auth-unit-results  
+                - E2E Coverage & Results: latch-auth-e2e-results  
+                - Lint: ci-results-lint.json
