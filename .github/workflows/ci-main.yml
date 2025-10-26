@@ -220,16 +220,12 @@ jobs:
         run: |
           bun prisma/seed-check.ts
 
+                
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
         run: |
           mkdir -p latch-auth-ci-artifacts
-          
-      - name: Run E2E Tests with Coverage
-        working-directory: apps/latch-auth
-        run: |
-          mkdir -p latch-auth-ci-artifacts
-          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory coverage/e2e || exit 1
+          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory coverage || exit 1
             
 
       - name: Build Docker Image (Prod-like)
@@ -276,21 +272,20 @@ jobs:
         with:
           name: latch-auth-e2e-results
           path: |
-            latch-auth-ci-artifacts/*
-            coverage/e2e
+            apps/latch-auth/latch-auth-ci-artifacts/*
+            apps/latch-auth/coverage
 
       - name: Generate E2E Summary
         id: summary
         working-directory: apps/latch-auth
         run: |
-          if [ -f "coverage/e2e/lcov-report/index.html" ]; then
-            # Extract "47.97" from the "All files" row
+          if [ -f "coverage/lcov-report/index.html" ]; then
             E2E_COV=$(awk '/All files[[:space:]]+\|/ {
               gsub(/\|/, " ");
               for(i=1; i<=NF; i++) if($i ~ /^[0-9]+\.[0-9]+$/) {
                 printf "%.0f", $5; exit;
               }
-            }' coverage/e2e/lcov-report/index.html || echo 0)
+            }' coverage/lcov-report/index.html || echo 0)
           else
             E2E_COV=0
           fi
