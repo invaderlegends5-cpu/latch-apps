@@ -227,7 +227,7 @@ jobs:
           mkdir -p apps/latch-auth/latch-auth-ci-artifacts
           timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
       
-      - name: Debug: Check coverage output
+      - name: Debug- Check coverage output
         working-directory: apps/latch-auth
         run: |
           ls -la latch-auth-ci-artifacts/
