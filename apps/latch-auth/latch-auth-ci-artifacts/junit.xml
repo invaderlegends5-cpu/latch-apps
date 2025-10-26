@@ -1,11 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="3" failures="0" errors="0" time="3.944">
-  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-21T20:03:34" time="2.858" tests="3">
-    <testcase classname="EventController calls findByType with provided filters" name="EventController calls findByType with provided filters" time="0.015">
+<testsuites name="jest tests" tests="22" failures="0" errors="0" time="5.357">
+  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="1.94" tests="9">
+    <testcase classname="EventController calls findRecent with correct args" name="EventController calls findRecent with correct args" time="0.021">
     </testcase>
-    <testcase classname="EventController calls findRecent and returns recent events" name="EventController calls findRecent and returns recent events" time="0.004">
+    <testcase classname="EventController throws BadRequestException if limit is invalid" name="EventController throws BadRequestException if limit is invalid" time="0.007">
+    </testcase>
+    <testcase classname="EventController throws BadRequestException if from date is invalid" name="EventController throws BadRequestException if from date is invalid" time="0.021">
+    </testcase>
+    <testcase classname="EventController calls findByType with correct args" name="EventController calls findByType with correct args" time="0.003">
+    </testcase>
+    <testcase classname="EventController throws BadRequestException when type missing" name="EventController throws BadRequestException when type missing" time="0.002">
+    </testcase>
+    <testcase classname="EventController throws BadRequestException for invalid type value" name="EventController throws BadRequestException for invalid type value" time="0.002">
+    </testcase>
+    <testcase classname="EventController calls findByUser with correct args" name="EventController calls findByUser with correct args" time="0.004">
+    </testcase>
+    <testcase classname="EventController throws BadRequestException if userId missing" name="EventController throws BadRequestException if userId missing" time="0.002">
+    </testcase>
+    <testcase classname="EventController throws BadRequestException if offset is invalid" name="EventController throws BadRequestException if offset is invalid" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:49" time="0.793" tests="1">
+    <testcase classname="AppController root should return &quot;Hello World!&quot;" name="AppController root should return &quot;Hello World!&quot;" time="0.05">
+    </testcase>
+  </testsuite>
+  <testsuite name="AuthController.logout (two-event)" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="3.19" tests="2">
+    <testcase classname="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" name="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" time="0.101">
+    </testcase>
+    <testcase classname="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" name="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" time="0.006">
+    </testcase>
+  </testsuite>
+  <testsuite name="AuthController.logout (two-event)" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="3.209" tests="2">
+    <testcase classname="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" name="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" time="0.093">
+    </testcase>
+    <testcase classname="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" name="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" time="0.009">
+    </testcase>
+  </testsuite>
+  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:50" time="0.718" tests="3">
+    <testcase classname="EventController calls findByType with provided filters" name="EventController calls findByType with provided filters" time="0.009">
+    </testcase>
+    <testcase classname="EventController calls findRecent and returns recent events" name="EventController calls findRecent and returns recent events" time="0.006">
     </testcase>
     <testcase classname="EventController calls findByUser and returns user events" name="EventController calls findByUser and returns user events" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="EventLogService.queryEvents" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:51" time="0.36" tests="5">
+    <testcase classname="EventLogService.queryEvents calls Prisma with correct filters (all parameters)" name="EventLogService.queryEvents calls Prisma with correct filters (all parameters)" time="0.008">
+    </testcase>
+    <testcase classname="EventLogService.queryEvents handles missing filters gracefully" name="EventLogService.queryEvents handles missing filters gracefully" time="0.002">
+    </testcase>
+    <testcase classname="EventLogService.queryEvents applies only startDate" name="EventLogService.queryEvents applies only startDate" time="0.003">
+    </testcase>
+    <testcase classname="EventLogService.queryEvents applies only endDate" name="EventLogService.queryEvents applies only endDate" time="0.003">
+    </testcase>
+    <testcase classname="EventLogService.queryEvents returns paginated structure" name="EventLogService.queryEvents returns paginated structure" time="0.003">
     </testcase>
   </testsuite>
 </testsuites>

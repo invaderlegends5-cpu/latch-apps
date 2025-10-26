@@ -1,6 +1,10 @@
 // latch-apps/apps/latch-auth/jest.config.js
+const { createDefaultPreset } = require('ts-jest');
+
+const preset = createDefaultPreset();
+
 module.exports = {
-  preset: 'ts-jest',
+  ...preset,
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/test'],
   reporters: [
@@ -8,11 +12,12 @@ module.exports = {
     [
       'jest-junit',
       {
-        outputDirectory: process.env.JEST_JUNIT_OUTPUT_DIR || 'latch-auth-ci-artifacts',
-        outputName: process.env.JEST_JUNIT_OUTPUT_NAME || 'junit.xml',
+        outputDirectory: '<rootDir>/latch-auth-ci-artifacts',
+        outputName: 'junit.xml',
       },
     ],
   ],
-  coverageDirectory: 'latch-auth-ci-artifacts/coverage',
+  coverageDirectory: '<rootDir>/latch-auth-ci-artifacts/coverage',
   collectCoverageFrom: ['src/**/*.ts'],
+  transformIgnorePatterns: ['node_modules'],
 };
