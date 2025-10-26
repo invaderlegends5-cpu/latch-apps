@@ -229,15 +229,21 @@ jobs:
         working-directory: apps/latch-auth
         run: docker build --no-cache -t latch-auth:e2e -f Dockerfile .
 
-      - name: Run Latch Auth Docker Container
+      - name: Run Latch Auth Docker Container & Health Check
         run: |
-          NETWORK=$(docker network ls --format '{{.Name}}' | grep github_network)
-          
+          # Get the GitHub Actions network name
+          NETWORK=$(docker network ls --format '{{.Name}}' | grep 'github_network')
+          if [ -z "$NETWORK" ]; then
+            echo "❌ No GitHub network found"
+            exit 1
+          fi
+      
+          # Run container on the same network as services
           docker run -d --rm --name latch_auth_test -p 3000:3000 \
             --network "$NETWORK" \
             -e DATABASE_URL="postgresql://latch:latch123@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
-            -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+            -e EVENT_SIGNING_SECRET="mock-signing-secret" \
             -e NODE_ENV=test \
             latch-auth:e2e
       
@@ -245,10 +251,17 @@ jobs:
           for i in {1..40}; do
             if curl -fsS http://localhost:3000/v1/health >/dev/null 2>&1; then
               echo "✅ Latch Auth API healthy!"
-              break
+              # Write health.json
+              mkdir -p latch-auth-ci-artifacts
+              echo '{"health":"ok","checkedAt":"'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"}' > latch-auth-ci-artifacts/health.json
+              exit 0
             fi
             sleep 2
           done
+      
+          echo "❌ Latch Auth API failed to become healthy"
+          docker logs latch_auth_test || true
+          exit 1
 
           - name: Health Check (/v1/health)
           run: |
