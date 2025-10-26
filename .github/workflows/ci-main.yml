@@ -224,9 +224,14 @@ jobs:
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
         run: |
-          mkdir -p latch-auth-ci-artifacts
+          mkdir -p apps/latch-auth/latch-auth-ci-artifacts
           timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
-            
+      
+      - name: Debug: Check coverage output
+        working-directory: apps/latch-auth
+        run: |
+          ls -la latch-auth-ci-artifacts/
+          ls -la latch-auth-ci-artifacts/coverage/ || echo "Coverage missing!"
 
       - name: Build Docker Image (Prod-like)
         working-directory: apps/latch-auth
