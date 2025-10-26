@@ -1,59 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="22" failures="0" errors="0" time="5.357">
-  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="1.94" tests="9">
-    <testcase classname="EventController calls findRecent with correct args" name="EventController calls findRecent with correct args" time="0.021">
+<testsuites name="jest tests" tests="6" failures="3" errors="0" time="82.866">
+  <testsuite name="AppController (e2e)" errors="0" failures="0" skipped="0" timestamp="2025-10-26T20:55:48" time="78.142" tests="2">
+    <testcase classname="AppController (e2e) /v1/health (GET)" name="AppController (e2e) /v1/health (GET)" time="7.961">
     </testcase>
-    <testcase classname="EventController throws BadRequestException if limit is invalid" name="EventController throws BadRequestException if limit is invalid" time="0.007">
-    </testcase>
-    <testcase classname="EventController throws BadRequestException if from date is invalid" name="EventController throws BadRequestException if from date is invalid" time="0.021">
-    </testcase>
-    <testcase classname="EventController calls findByType with correct args" name="EventController calls findByType with correct args" time="0.003">
-    </testcase>
-    <testcase classname="EventController throws BadRequestException when type missing" name="EventController throws BadRequestException when type missing" time="0.002">
-    </testcase>
-    <testcase classname="EventController throws BadRequestException for invalid type value" name="EventController throws BadRequestException for invalid type value" time="0.002">
-    </testcase>
-    <testcase classname="EventController calls findByUser with correct args" name="EventController calls findByUser with correct args" time="0.004">
-    </testcase>
-    <testcase classname="EventController throws BadRequestException if userId missing" name="EventController throws BadRequestException if userId missing" time="0.002">
-    </testcase>
-    <testcase classname="EventController throws BadRequestException if offset is invalid" name="EventController throws BadRequestException if offset is invalid" time="0.003">
+    <testcase classname="AppController (e2e) / (GET) should return 404 or redirect" name="AppController (e2e) / (GET) should return 404 or redirect" time="0.948">
     </testcase>
   </testsuite>
-  <testsuite name="AppController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:49" time="0.793" tests="1">
-    <testcase classname="AppController root should return &quot;Hello World!&quot;" name="AppController root should return &quot;Hello World!&quot;" time="0.05">
+  <testsuite name="HealthController (e2e)" errors="0" failures="1" skipped="0" timestamp="2025-10-26T20:55:48" time="78.642" tests="2">
+    <testcase classname="HealthController (e2e) /v1/health (GET) should return status ok and db connected" name="HealthController (e2e) /v1/health (GET) should return status ok and db connected" time="1.333">
+    </testcase>
+    <testcase classname="HealthController (e2e) should confirm that mock seed data exists" name="HealthController (e2e) should confirm that mock seed data exists" time="1.222">
+      <failure>PrismaClientKnownRequestError: 
+Invalid `prisma.tenant.count()` invocation in
+/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/test/health.e2e-spec.ts:44:45
+
+  41 });
+  42 
+  43 it(&apos;should confirm that mock seed data exists&apos;, async () =&gt; {
+→ 44   const tenantCount = await prisma.tenant.count(
+The table `public.Tenant` does not exist in the current database.
+    at ei.handleRequestError (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/@prisma/client/src/runtime/RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/@prisma/client/src/runtime/RequestHandler.ts:174:12)
+    at ei.request (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/@prisma/client/src/runtime/RequestHandler.ts:143:12)
+    at a (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:833:24)
+    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/test/health.e2e-spec.ts:44:25)</failure>
     </testcase>
   </testsuite>
-  <testsuite name="AuthController.logout (two-event)" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="3.19" tests="2">
-    <testcase classname="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" name="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" time="0.101">
+  <testsuite name="Auth Lifecycle (E2E)" errors="0" failures="2" skipped="0" timestamp="2025-10-26T20:55:48" time="79.169" tests="2">
+    <testcase classname="Auth Lifecycle (E2E) should complete OTP -&gt; verify -&gt; logout flow correctly" name="Auth Lifecycle (E2E) should complete OTP -&gt; verify -&gt; logout flow correctly" time="2.939">
+      <failure>Error: expected 201 &quot;Created&quot;, got 500 &quot;Internal Server Error&quot;
+    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/test/auth/logout.e2e-spec.ts:41:8)
+    at Promise.finally.completed (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:275:16)
+    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:343:7)
+    at Object.worker (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:497:12)
+----
+    at Test._assertStatus (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:309:14)
+    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:365:13
+    at Test._assertFunction (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:342:13)
+    at Test.assert (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:195:23)
+    at localAssert (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:138:14)
+    at Server.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:152:11)
+    at Object.onceWrapper (node:events:633:28)
+    at Server.emit (node:events:519:28)
+    at emitCloseNT (node:net:2419:8)
+    at processTicksAndRejections (node:internal/process/task_queues:89:21)</failure>
     </testcase>
-    <testcase classname="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" name="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" time="0.006">
-    </testcase>
-  </testsuite>
-  <testsuite name="AuthController.logout (two-event)" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:47" time="3.209" tests="2">
-    <testcase classname="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" name="AuthController.logout (two-event) valid session → revokes, clears cookies, logs LOGOUT" time="0.093">
-    </testcase>
-    <testcase classname="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" name="AuthController.logout (two-event) invalid/stale session → logs LOGOUT_ATTEMPT_INVALID then LOGOUT" time="0.009">
-    </testcase>
-  </testsuite>
-  <testsuite name="EventController" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:50" time="0.718" tests="3">
-    <testcase classname="EventController calls findByType with provided filters" name="EventController calls findByType with provided filters" time="0.009">
-    </testcase>
-    <testcase classname="EventController calls findRecent and returns recent events" name="EventController calls findRecent and returns recent events" time="0.006">
-    </testcase>
-    <testcase classname="EventController calls findByUser and returns user events" name="EventController calls findByUser and returns user events" time="0.005">
-    </testcase>
-  </testsuite>
-  <testsuite name="EventLogService.queryEvents" errors="0" failures="0" skipped="0" timestamp="2025-10-26T16:27:51" time="0.36" tests="5">
-    <testcase classname="EventLogService.queryEvents calls Prisma with correct filters (all parameters)" name="EventLogService.queryEvents calls Prisma with correct filters (all parameters)" time="0.008">
-    </testcase>
-    <testcase classname="EventLogService.queryEvents handles missing filters gracefully" name="EventLogService.queryEvents handles missing filters gracefully" time="0.002">
-    </testcase>
-    <testcase classname="EventLogService.queryEvents applies only startDate" name="EventLogService.queryEvents applies only startDate" time="0.003">
-    </testcase>
-    <testcase classname="EventLogService.queryEvents applies only endDate" name="EventLogService.queryEvents applies only endDate" time="0.003">
-    </testcase>
-    <testcase classname="EventLogService.queryEvents returns paginated structure" name="EventLogService.queryEvents returns paginated structure" time="0.003">
+    <testcase classname="Auth Lifecycle (E2E) should handle invalid OTP codes" name="Auth Lifecycle (E2E) should handle invalid OTP codes" time="0.03">
+      <failure>Error: expected 201 &quot;Created&quot;, got 500 &quot;Internal Server Error&quot;
+    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/test/auth/logout.e2e-spec.ts:91:8)
+    at Promise.finally.completed (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at _runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:275:16)
+    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:343:7)
+    at Object.worker (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/testWorker.js:497:12)
+----
+    at Test._assertStatus (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:309:14)
+    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:365:13
+    at Test._assertFunction (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:342:13)
+    at Test.assert (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:195:23)
+    at localAssert (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:138:14)
+    at Server.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/supertest/lib/test.js:152:11)
+    at Object.onceWrapper (node:events:633:28)
+    at Server.emit (node:events:519:28)
+    at emitCloseNT (node:net:2419:8)
+    at processTicksAndRejections (node:internal/process/task_queues:89:21)</failure>
     </testcase>
   </testsuite>
 </testsuites>
