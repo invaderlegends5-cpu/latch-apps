@@ -117,7 +117,12 @@ jobs:
       id: coverage
       working-directory: apps/latch-auth
       run: |
-        COV=$(grep -oP 'All files.*?\|\s+\K[0-9.]+(?=\s+\|)' test-output.log | head -1 | cut -d. -f1 || echo 0)
+        COV=$(awk '/All files[[:space:]]+\|/ {
+          gsub(/\|/, " ");
+          for(i=1; i<=NF; i++) if($i ~ /^[0-9]+\.[0-9]+$/) {
+            printf "%.0f", $5; exit;
+          }
+        }' test-output.log || echo 0)
         echo "coverage=$COV" >> $GITHUB_OUTPUT
       
     - name: Install xmllint
@@ -262,13 +267,7 @@ jobs:
           echo "❌ Latch Auth API failed to become healthy"
           docker logs latch_auth_test || true
           exit 1
-
-          - name: Health Check (/v1/health)
-          run: |
-            mkdir -p "${{ env.CI_ARTIFACT_PATH }}"
-            curl -f http://localhost:3000/v1/health || (echo "❌ Health check failed!" && exit 1)
-            echo '{"health":"ok","checkedAt":"'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"}' > "${{ env.CI_ARTIFACT_PATH }}/health.json"
-      
+          
       - name: Upload E2E Coverage & Results
         if: always()
         uses: actions/upload-artifact@v4
