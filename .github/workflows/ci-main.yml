@@ -225,7 +225,7 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           mkdir -p latch-auth-ci-artifacts
-          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory coverage || exit 1
+          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
             
 
       - name: Build Docker Image (Prod-like)
@@ -271,21 +271,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: latch-auth-e2e-results
-          path: |
-            apps/latch-auth/latch-auth-ci-artifacts/*
-            apps/latch-auth/coverage
+          path: apps/latch-auth/latch-auth-ci-artifacts
 
       - name: Generate E2E Summary
         id: summary
         working-directory: apps/latch-auth
         run: |
-          if [ -f "coverage/lcov-report/index.html" ]; then
+          if [ -f "latch-auth-ci-artifacts/coverage/lcov-report/index.html" ]; then
             E2E_COV=$(awk '/All files[[:space:]]+\|/ {
               gsub(/\|/, " ");
               for(i=1; i<=NF; i++) if($i ~ /^[0-9]+\.[0-9]+$/) {
                 printf "%.0f", $5; exit;
               }
-            }' coverage/lcov-report/index.html || echo 0)
+            }' latch-auth-ci-artifacts/coverage/lcov-report/index.html || echo 0)
           else
             E2E_COV=0
           fi
