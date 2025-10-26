@@ -11,5 +11,15 @@
   },
   "setupFilesAfterEnv": ["<rootDir>/test/jest-e2e.setup.ts"],
   "testTimeout": 30000,
-  "setupFiles": ["<rootDir>/test/setup-env.ts"]
+  "setupFiles": ["<rootDir>/test/setup-env.ts"],
+  "reporters": [
+    "default",
+    ["jest-junit", {
+      "outputDirectory": "<rootDir>/latch-auth-ci-artifacts",
+      "outputName": "junit.xml"
+    }]
+  ],
+  "collectCoverage": true,
+  "coverageDirectory": "<rootDir>/coverage/e2e",
+  "collectCoverageFrom": ["src/**/*.ts"]
 }
