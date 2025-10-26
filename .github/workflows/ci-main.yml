@@ -285,6 +285,7 @@ jobs:
         run: docker ps -a --filter "name=latch_auth_test" -q | xargs -r docker rm -f || true
 
   post-summary:
+    if: github.event_name == 'pull_request'
     name: Post Unified CI Summary to PR
     runs-on: ubuntu-latest
     needs: [lint-typecheck, unit, e2e]
