@@ -282,13 +282,25 @@ jobs:
         id: summary
         working-directory: apps/latch-auth
         run: |
-          if [ -f "latch-auth-ci-artifacts/coverage/lcov-report/index.html" ]; then
-            E2E_COV=$(awk '/All files[[:space:]]+\|/ {
-              gsub(/\|/, " ");
-              for(i=1; i<=NF; i++) if($i ~ /^[0-9]+\.[0-9]+$/) {
-                printf "%.0f", $5; exit;
+          if [ -f "latch-auth-ci-artifacts/coverage/lcov.info" ]; then
+            # Compute total line coverage: sum(HITS) / sum(TOTAL) * 100
+            E2E_COV=$(awk '
+              /^SF:/ { in_file = 1 }
+              /^DA:/ && in_file {
+                split($0, a, ",");
+                hits = a[2];
+                total_lines++;
+                if (hits > 0) covered_lines++;
               }
-            }' latch-auth-ci-artifacts/coverage/lcov-report/index.html || echo 0)
+              END {
+                if (total_lines > 0) {
+                  pct = int(covered_lines * 100 / total_lines);
+                  print pct;
+                } else {
+                  print 0;
+                }
+              }
+            ' latch-auth-ci-artifacts/coverage/lcov.info)
           else
             E2E_COV=0
           fi
