@@ -266,7 +266,7 @@ jobs:
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Post summary to PR
-        if: github.event_name == 'pull_request'
+        
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           message: ${{ steps.summary.outputs.text }}
