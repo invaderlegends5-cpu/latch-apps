@@ -60,7 +60,6 @@ jobs:
       - name: Run Unit Tests
         working-directory: apps/latch-auth
         run: |
-          bun install --frozen-lockfile
           npx prisma generate
           bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
         # run: bun test --ci --no-colors
@@ -149,6 +148,19 @@ jobs:
           echo "❌ PostgreSQL failed to start"
           exit 1
 
+      - name: Wait for Redis
+        run: |
+          echo "Waiting for Redis..."
+          for i in {1..15}; do
+            if redis-cli -h localhost ping | grep -q "PONG"; then
+              echo "✅ Redis ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "❌ Redis failed to start"
+          exit 1
+
       - name: Apply Prisma Migrations
         working-directory: apps/latch-auth
         run: bunx prisma migrate deploy
@@ -182,7 +194,7 @@ jobs:
       - name: Run Latch Auth in Docker (with service network)
         run: |
           # Discover GitHub Actions' auto-created bridge network
-          NETWORK=$(docker network ls --format '{{.Name}}' | grep -E "github|bridge" | head -n1)
+          NETWORK="github_network_${GITHUB_JOB}"
           if [ -z "$NETWORK" ]; then
             echo "⚠️ Could not auto-detect GitHub network; falling back to 'host'"
             NETWORK="host"
