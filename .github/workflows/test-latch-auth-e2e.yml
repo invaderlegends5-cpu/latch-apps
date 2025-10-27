@@ -23,7 +23,7 @@ env:
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   NODE_ENV: test
-  # CI_ARTIFACT_PATH: apps/latch-auth/latch-auth-ci-artifacts
+  CI_ARTIFACT_PATH: apps/latch-auth/latch-auth-ci-artifacts
   AWS_REGION: us-east-1  # if needed for mocks or future steps
 
 concurrency:
