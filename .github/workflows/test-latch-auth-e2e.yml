@@ -61,7 +61,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Unit Tests
-        working-directory: apps/latch-auth
+        working-directory: ./apps/latch-auth
         run: bun test --ci --no-colors
 
       - name: Upload Unit Artifacts
