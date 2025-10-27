@@ -59,7 +59,11 @@ jobs:
 
       - name: Run Unit Tests
         working-directory: apps/latch-auth
-        run: bun test --ci --no-colors
+        run: |
+          bun install --frozen-lockfile
+          npx prisma generate
+          bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
+        # run: bun test --ci --no-colors
 
       - name: Upload Unit Artifacts
         if: always()
