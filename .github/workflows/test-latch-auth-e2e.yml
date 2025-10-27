@@ -243,7 +243,9 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           TEST_SUMMARY="❓ E2E results unavailable"
-          JUNIT="${{ env.CI_ARTIFACT_PATH }}/junit.xml"
+          JUNIT="latch-auth-ci-artifacts/junit.xml"
+          ls -la latch-auth-ci-artifacts/ || echo "junit dir missing"
+          stat latch-auth-ci-artifacts/junit.xml || echo "junit.xml missing"
           if [ -f "$JUNIT" ]; then
             TOTAL=$(xmllint --xpath 'string(count(//testcase))' "$JUNIT")
             FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' "$JUNIT")
