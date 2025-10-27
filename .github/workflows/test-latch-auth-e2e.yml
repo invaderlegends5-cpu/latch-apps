@@ -60,7 +60,7 @@ jobs:
       - name: Run Unit Tests
         working-directory: apps/latch-auth
         run: |
-          npx prisma generate
+          bunx prisma generate
           bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
         # run: bun test --ci --no-colors
 
@@ -194,20 +194,25 @@ jobs:
         working-directory: apps/latch-auth
         run: docker build --no-cache -t latch-auth:e2e -f Dockerfile .
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Run Latch Auth in Docker (with service network)
         run: |
-          # Discover GitHub Actions' auto-created bridge network
-          NETWORK="github_network_${GITHUB_JOB}"
-          if [ -z "$NETWORK" ]; then
-            echo "⚠️ Could not auto-detect GitHub network; falling back to 'host'"
+          # Detect the Docker network that includes the 'postgres' container
+          NETWORK=$(docker inspect postgres --format '{{json .NetworkSettings.Networks}}' | jq -r 'keys[0]')
+          
+          if [ -z "$NETWORK" ] || [ "$NETWORK" = "null" ]; then
+            echo "⚠️ Failed to detect Docker network; falling back to 'host' mode"
             NETWORK="host"
             DB_HOST="localhost"
             REDIS_HOST="localhost"
           else
+            echo "✅ Detected Docker network: $NETWORK"
             DB_HOST="postgres"
             REDIS_HOST="redis"
           fi
-
+      
           docker run -d --name latch_auth_test -p 3000:3000 \
             --network "$NETWORK" \
             -e DATABASE_URL="postgresql://latch:latch123@${DB_HOST}:5432/latch_auth" \
@@ -215,7 +220,7 @@ jobs:
             -e EVENT_SIGNING_SECRET="mock-signing-secret" \
             -e NODE_ENV=test \
             latch-auth:e2e
-
+      
           echo "Waiting for API to boot..."
           for i in {1..40}; do
             if curl -fsS http://localhost:3000/v1/health >/dev/null 2>&1; then
