@@ -202,15 +202,14 @@ jobs:
       - name: Run Latch Auth in Docker (with service network)
         run: |
           # Detect the Docker network that includes the 'postgres' container
-          NETWORK=$(docker inspect postgres --format '{{json .NetworkSettings.Networks}}' | jq -r 'keys[0]')
-          
+          NETWORK=$(docker inspect $(hostname) --format '{{json .NetworkSettings.Networks}}' | jq -r 'keys[0]')
           if [ -z "$NETWORK" ] || [ "$NETWORK" = "null" ]; then
-            echo "⚠️ Failed to detect Docker network; falling back to 'host' mode"
+            echo "⚠️ Falling back to host network"
             NETWORK="host"
             DB_HOST="localhost"
             REDIS_HOST="localhost"
           else
-            echo "✅ Detected Docker network: $NETWORK"
+            echo "✅ Using network: $NETWORK"
             DB_HOST="postgres"
             REDIS_HOST="redis"
           fi
@@ -269,7 +268,7 @@ jobs:
       
           SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-          
+
       - name: Post summary to PR
         
         uses: marocchino/sticky-pull-request-comment@v2
