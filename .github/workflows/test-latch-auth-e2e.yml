@@ -180,10 +180,12 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
-          bun test:e2e --ci --no-colors \
-            --coverage \
+          bunx jest --ci --testEnvironment node \
+            --reporters=default \
+            --reporters=jest-junit \
             --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
-            --coverageDirectory=coverage || (echo "❌ E2E tests failed" && exit 1)
+            --coverage \
+            --coverageDirectory=coverage
 
       - name: Debug- Check coverage output
         working-directory: apps/latch-auth
