@@ -268,7 +268,9 @@ jobs:
       
           SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-
+          echo "✅ Final test summary: $TEST_SUMMARY"
+          echo "text=$TEST_SUMMARY | $COVERAGE_SUMMARY" >> $GITHUB_OUTPUT
+          
       - name: Post summary to PR
         
         uses: marocchino/sticky-pull-request-comment@v2
