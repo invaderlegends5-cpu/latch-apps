@@ -246,27 +246,30 @@ jobs:
         run: |
           TEST_SUMMARY="❓ E2E results unavailable"
           JUNIT="latch-auth-ci-artifacts/junit.xml"
-          ls -la latch-auth-ci-artifacts/ || echo "junit dir missing"
-          stat latch-auth-ci-artifacts/junit.xml || echo "junit.xml missing"
           if [ -f "$JUNIT" ]; then
-            TOTAL=$(xmllint --xpath 'string(count(//testcase))' "$JUNIT")
-            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' "$JUNIT")
+            TOTAL=$(xmllint --xpath 'string(count(//testcase))' "$JUNIT" 2>/dev/null || echo 0)
+            FAILURES=$(xmllint --xpath 'string(count(//testcase[failure]))' "$JUNIT" 2>/dev/null || echo 0)
+            
+            # Sanitize to integers
+            TOTAL=$(echo "$TOTAL" | tr -cd '[:digit:]' || echo 0)
+            FAILURES=$(echo "$FAILURES" | tr -cd '[:digit:]' || echo 0)
+            
             if [ "$FAILURES" -eq 0 ]; then
               TEST_SUMMARY="✅ E2E passed ($TOTAL tests)"
             else
               TEST_SUMMARY="❌ E2E failed: $FAILURES/$TOTAL"
             fi
           fi
-
+      
           COVERAGE_SUMMARY="❓ Coverage unavailable"
           if [ -f "coverage/lcov.info" ]; then
             COV_LINE=$(grep -m1 "LH:" coverage/lcov.info | awk -F: '{print $2"%"}')
             COVERAGE_SUMMARY="📊 Coverage: ${COV_LINE:-available}"
           fi
-
+      
           SUMMARY="$TEST_SUMMARY | $COVERAGE_SUMMARY"
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-
+          
       - name: Post summary to PR
         
         uses: marocchino/sticky-pull-request-comment@v2
