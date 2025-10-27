@@ -270,7 +270,7 @@ jobs:
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
           echo "✅ Final test summary: $TEST_SUMMARY"
           echo "text=$TEST_SUMMARY | $COVERAGE_SUMMARY" >> $GITHUB_OUTPUT
-          
+
       - name: Post summary to PR
         
         uses: marocchino/sticky-pull-request-comment@v2
@@ -287,15 +287,15 @@ jobs:
             apps/latch-auth/junit.xml
             apps/latch-auth/coverage
           if-no-files-found: ignore
-
-      - name: Cleanup Docker images
-        if: always()
-        run: docker rmi latch-auth:e2e || true
-        
+            
       - name: Cleanup Docker
         if: always()
         run: |
           docker rm -f latch_auth_test 2>/dev/null || true
+
+      - name: Cleanup Docker images
+        if: always()
+        run: docker rmi latch-auth:e2e || true
         
       - name: Cleanup Docker System
         if: always()
