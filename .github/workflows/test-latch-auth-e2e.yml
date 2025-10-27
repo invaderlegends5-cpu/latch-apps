@@ -51,17 +51,17 @@ jobs:
         with:
           path: |
             ~/.bun
-            latch-apps/apps/latch-auth/node_modules
-          key: bun-deps-${{ runner.os }}-lockfile-${{ hashFiles('latch-apps/apps/latch-auth/bun.lock') }}
+            apps/latch-auth/node_modules
+          key: bun-deps-${{ runner.os }}-lockfile-${{ hashFiles('apps/latch-auth/bun.lock') }}
           restore-keys: |
             bun-deps-${{ runner.os }}-
 
       - name: Install Dependencies
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
 
       - name: Run Unit Tests
-        working-directory: ./apps/latch-auth
+        working-directory: apps/latch-auth
         run: bun test --ci --no-colors
 
       - name: Upload Unit Artifacts
