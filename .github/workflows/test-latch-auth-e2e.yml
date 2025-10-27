@@ -23,7 +23,7 @@ env:
   REDIS_URL: redis://localhost:6379
   EVENT_SIGNING_SECRET: mock-signing-secret
   NODE_ENV: test
-  # CI_ARTIFACT_PATH: latch-apps/apps/latch-auth/latch-auth-ci-artifacts
+  # CI_ARTIFACT_PATH: apps/latch-auth/latch-auth-ci-artifacts
   AWS_REGION: us-east-1  # if needed for mocks or future steps
 
 concurrency:
@@ -35,12 +35,9 @@ jobs:
     name: 🧪 Unit Tests (no DB)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout latch-apps
+      - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          repository: invaderlegends5-cpu/latch-apps
-          path: latch-apps
-
+        
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -69,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: latch-auth-unit-results
-          path: latch-apps/apps/latch-auth/junit.xml
+          path: apps/latch-auth/junit.xml
           if-no-files-found: ignore
 
   e2e:
@@ -102,12 +99,9 @@ jobs:
           --health-retries=10
 
     steps:
-      - name: Checkout latch-apps
+      - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          repository: invaderlegends5-cpu/latch-apps
-          path: latch-apps
-
+        
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -116,7 +110,7 @@ jobs:
       - name: Check for bun.lock
         id: bun_lock_check
         run: |
-          if [ -f "latch-apps/apps/latch-auth/bun.lock" ]; then
+          if [ -f "apps/latch-auth/bun.lock" ]; then
             echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "found=false" >> $GITHUB_OUTPUT
@@ -128,17 +122,17 @@ jobs:
         with:
           path: |
             ~/.bun
-            latch-apps/apps/latch-auth/node_modules
-          key: bun-deps-${{ runner.os }}-lockfile-${{ hashFiles('latch-apps/apps/latch-auth/bun.lock') }}
+            apps/latch-auth/node_modules
+          key: bun-deps-${{ runner.os }}-lockfile-${{ hashFiles('apps/latch-auth/bun.lock') }}
           restore-keys: |
             bun-deps-${{ runner.os }}-
 
       - name: Install Dependencies
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
 
       - name: Generate Prisma Client
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bunx prisma generate
 
       - name: Wait for PostgreSQL
@@ -152,19 +146,19 @@ jobs:
           exit 1
 
       - name: Apply Prisma Migrations
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bunx prisma migrate deploy
 
       - name: Run Prisma Seed
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bun run prisma:seed
 
       - name: Verify Seed Presence
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: bun prisma/seed-check.ts
 
       - name: Run E2E Tests with Coverage
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
           bun test:e2e --ci --no-colors \
@@ -173,12 +167,12 @@ jobs:
             --coverageDirectory=coverage || (echo "❌ E2E tests failed" && exit 1)
 
       - name: Debug- Check coverage output
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: |
           ls -la coverage/ || echo "Coverage missing!"        
 
       - name: Build Docker Image (Prod-like)
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: docker build --no-cache -t latch-auth:e2e -f Dockerfile .
 
       - name: Run Latch Auth in Docker (with service network)
@@ -222,7 +216,7 @@ jobs:
 
       - name: Generate Summary for PR
         id: summary
-        working-directory: latch-apps/apps/latch-auth
+        working-directory: apps/latch-auth
         run: |
           TEST_SUMMARY="❓ E2E results unavailable"
           JUNIT="${{ env.CI_ARTIFACT_PATH }}/junit.xml"
@@ -257,9 +251,9 @@ jobs:
         with:
           name: latch-auth-e2e-results
           path: |
-            latch-apps/apps/latch-auth/${{ env.CI_ARTIFACT_PATH }}
-            latch-apps/apps/latch-auth/junit.xml
-            latch-apps/apps/latch-auth/coverage
+            apps/latch-auth/${{ env.CI_ARTIFACT_PATH }}
+            apps/latch-auth/junit.xml
+            apps/latch-auth/coverage
           if-no-files-found: ignore
 
       - name: Cleanup Docker images
