@@ -172,7 +172,7 @@ jobs:
             --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
             --coverageDirectory=coverage || (echo "❌ E2E tests failed" && exit 1)
 
-      - name: Debug: Check coverage output
+      - name: Debug- Check coverage output
         working-directory: latch-apps/apps/latch-auth
         run: |
           ls -la coverage/ || echo "Coverage missing!"        
