@@ -123,6 +123,7 @@ jobs:
           fi    
 
       - name: Cache Bun & Dependencies
+        if: steps.bun_lock_check.outputs.found == 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -160,7 +161,7 @@ jobs:
 
       - name: Verify Seed Presence
         working-directory: latch-apps/apps/latch-auth
-        run: bunx prisma migrate deploy || { echo "❌ Migration failed"; exit 1; }
+        run: bun prisma/seed-check.ts
 
       - name: Run E2E Tests with Coverage
         working-directory: latch-apps/apps/latch-auth
@@ -170,6 +171,11 @@ jobs:
             --coverage \
             --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
             --coverageDirectory=coverage || (echo "❌ E2E tests failed" && exit 1)
+
+      - name: Debug: Check coverage output
+        working-directory: latch-apps/apps/latch-auth
+        run: |
+          ls -la coverage/ || echo "Coverage missing!"        
 
       - name: Build Docker Image (Prod-like)
         working-directory: latch-apps/apps/latch-auth
