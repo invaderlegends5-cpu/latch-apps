@@ -97,6 +97,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     // OK — return user payload that will be attached as req.user
     return {
+      id: payload.sub,
       sub: payload.sub,
       tenantId: payload.tenantId,
       sessionId: payload.sessionId,

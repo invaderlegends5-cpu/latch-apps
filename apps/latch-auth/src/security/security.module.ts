@@ -27,6 +27,7 @@ import { SecurityController } from './security.controller';
 import { SecurityMonitoringService } from './security-monitor.service';
 import { EventLogService } from '../events/event.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { RateLimitingService } from '@/rate-limiting/rate-limiting.service';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     SecurityMonitoringService,
     EventLogService,
     ConfigService, // ✅ Kept as requested
+    RateLimitingService,
     // ❌ REMOVED: AdminGuard (unsafe, deleted)
     // ❌ REMOVED: PrismaService (now provided by PrismaModule)
   ],

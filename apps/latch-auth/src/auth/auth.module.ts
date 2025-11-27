@@ -13,6 +13,12 @@ import { CsrfGuard } from './guards/csrf.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventLogService } from '../events/event.service';
 import { SessionGuard } from './guards/session.guard';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
+import { DeviceFingerprintingService } from '@/device-fingerprinting/device-fingerprinting.service';
+import { BehavioralAnalysisService } from '@/behavioral-analysis/behavioral-analysis.service';
+import { BotDetectionService } from '@/bot-detection/bot-detection.service';
+import { SecurityMonitoringService } from '@/security/security-monitor.service';
+import { RateLimitingService } from '@/rate-limiting/rate-limiting.service';
 
 @Module({
   imports: [
@@ -33,6 +39,12 @@ import { SessionGuard } from './guards/session.guard';
     CsrfGuard,
     EventLogService,
     SessionGuard,
+    IPReputationService,
+    DeviceFingerprintingService,
+    BehavioralAnalysisService,
+    BotDetectionService,
+    SecurityMonitoringService,
+    RateLimitingService,
     // ✅ Register the interceptor here
     {
       provide: APP_INTERCEPTOR,

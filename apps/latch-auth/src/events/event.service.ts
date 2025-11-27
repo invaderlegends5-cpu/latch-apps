@@ -414,6 +414,7 @@ export class EventLogService {
     type?: string;
     userId?: string;
     sessionId?: string;
+    severity?: string;
     startDate?: Date;
     endDate?: Date;
     limit?: number;
@@ -424,6 +425,7 @@ export class EventLogService {
       type,
       userId,
       sessionId,
+      severity,
       startDate,
       endDate,
       limit = 50,
@@ -435,6 +437,7 @@ export class EventLogService {
     if (type) where.type = type;
     if (userId) where.userId = userId;
     if (sessionId) where.sessionId = sessionId;
+    if (severity) where.severity = severity;
     if (startDate || endDate) {
       where.createdAt = {
         ...(startDate && { gte: startDate }),
@@ -510,6 +513,8 @@ export class EventLogService {
     };
   }
 }
+
+
 
 /** capture those also before we scatter ourselves : EventLogService: Add a small caching of lastHash (optional micro-optimization). Currently you query DB for the latest hash in every logEvent. You could cache lastHash in memory and update it after insert; still verifying periodically in background. Rate limit event logging (optional for DoS prevention): If multiple services start writing high-frequency events (e.g., login attempts), you could add a bounded queue or apply per-type debounce before insert. Optional Enhancements for Future These are not needed now, but align with “the best of the best” long-term vision: Enhancement Benefit Tamper-evident external audit log (append-only file or Kafka) Extra assurance if DB compromised Event schema validation (Zod) Prevent accidental malformed data in metadata Metrics Prometheus Exporter Integrate with Grafana Key rotation for signingSecret Zero-trust lifecycle management Async persistence (queue buffer) For extremely high load (1000s events/sec)*/
 /**Notes, trade-offs & next steps

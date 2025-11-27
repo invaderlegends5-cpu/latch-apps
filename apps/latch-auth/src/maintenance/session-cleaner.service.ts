@@ -62,4 +62,63 @@ export class SessionCleanerService {
       `Cleanup complete: ${expiredSessions.count} expired sessions revoked, ${deletedTokens.count} old refresh tokens purged.`,
     );
   }
+   // --- NEW: Cron job for removing expired temporary roles ---
+   @Cron('0 * * * *') // Run every hour, adjust as needed
+   async removeExpiredTemporaryRoles() {
+     const now = new Date();
+     this.logger.debug('Running scheduled temporary role cleanup');
+ 
+     // Find user roles that have expired (validUntil < now) and were created for temporary assignment
+     // You might need to add a field to distinguish temporary assignments if not already clear from validUntil
+     // For now, assuming any role with a validUntil in the past is temporary and should be removed
+     const expiredTempRoles = await this.prisma.userRole.findMany({
+       where: {
+         validUntil: {
+           lt: now, // Less than now means it has expired
+         },
+       },
+       select: {
+         id: true, // The ID of the userRole entry to delete
+         userId: true, // Needed for logging
+         roleId: true, // Needed for logging
+         validUntil: true, // For logging
+       },
+     });
+ 
+     if (expiredTempRoles.length > 0) {
+       const userIds = [...new Set(expiredTempRoles.map(ur => ur.userId))]; // Get unique user IDs for cache invalidation
+ 
+       // Delete the expired userRole entries
+       const deletedRoles = await this.prisma.userRole.deleteMany({
+         where: {
+           id: { in: expiredTempRoles.map(ur => ur.id) },
+         },
+       });
+ 
+       this.logger.log(`Removed ${deletedRoles.count} expired temporary role assignments.`);
+ 
+       // Log the event for audit trail
+       for (const role of expiredTempRoles) {
+         await this.eventLogService.logEvent('USER_PROFILE_UPDATE', {
+           userId: role.userId, // Or SYSTEM user ID
+           tenantId: (await this.prisma.user.findUnique({ where: { id: role.userId }, select: { tenantId: true } }))?.tenantId || null,
+           metadata: {
+             action: 'temporary_role_expired',
+             reason: 'Scheduled cleanup removed expired temporary role',
+             roleId: role.roleId,
+             expiredAt: role.validUntil,
+           },
+           severity: 'INFO', // Could be 'SECURITY' if temporary roles are sensitive
+         });
+       }
+ 
+       // Invalidate cache for affected users (if applicable)
+       // Example: Assuming a method exists or you implement one
+       // await Promise.all(userIds.map(userId => this.invalidateUserCache(userId)));
+ 
+     } else {
+       this.logger.debug('No expired temporary roles found.');
+     }
+   }
+   // --- END NEW ---
 }

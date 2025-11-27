@@ -1,26 +1,3 @@
-// // src/auth/filters/clear-cookies-exception.filter.ts
-// import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
-// import { Response } from 'express';
-// import { ClearCookiesUnauthorizedException } from '../errors/clear-cookies.exception';
-// import { clearRefreshCookies } from '../utils/cookie.util';
-
-// @Catch(ClearCookiesUnauthorizedException)
-// export class ClearCookiesExceptionFilter implements ExceptionFilter {
-//   catch(exception: ClearCookiesUnauthorizedException, host: ArgumentsHost) {
-//     const ctx = host.switchToHttp();
-//     const res = ctx.getResponse<Response>();
-
-//     // clear cookies globally
-//     clearRefreshCookies(res);
-
-//     res.status(401).json({
-//       statusCode: 401,
-//       message: exception.message,
-//     });
-//   }
-// }
-
-
 // src/auth/filters/clear-cookies-exception.filter.ts
 import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';

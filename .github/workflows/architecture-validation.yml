@@ -1,0 +1,65 @@
+name: Architecture Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  architecture-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install dependency-cruiser
+      run: npm install --save-dev dependency-cruiser
+    
+    - name: Run architectural validation
+      run: |
+        # Create architectural rules based on your module structure
+        cat > .dependency-cruiser.js << 'EOF'
+        module.exports = {
+          forbidden: [
+            // Prevent cross-module service access that violates architecture
+            {
+              name: 'no-tenants-accessing-auth-services-directly',
+              severity: 'error',
+              from: { path: '^src/tenants/.*' },
+              to: { path: '^src/auth/(?!guards|decorators|types).*' }
+            },
+            {
+              name: 'no-admin-accessing-internal-services-directly',
+              severity: 'error',
+              from: { path: '^src/admin/.*' },
+              to: { path: '^src/(bot-detection|device-fingerprinting|ip-reputation)/.*' }
+            },
+            {
+              name: 'no-cross-module-internal-access',
+              severity: 'error',
+              from: { path: '^src/[^/]+/.*' },
+              to: { path: '^src/[^/]+/.*\/types\/.*' },
+              comment: "Prevent accessing internal types across modules"
+            }
+          ],
+          options: {
+            exclude: {
+              path: 'node_modules|dist|coverage|__tests__|*.spec.ts|*.test.ts|prisma'
+            },
+            tsPreCompilationDeps: true
+          }
+        };
+        EOF
+        
+        # Run the architectural validation
+        npx depcruise --validate .dependency-cruiser.js src/

@@ -7,6 +7,9 @@ module.exports = {
   ...preset,
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/test'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
   reporters: [
     'default',
     [

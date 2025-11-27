@@ -3,6 +3,7 @@ import { $Enums } from '@prisma/client';
 
 export type EventType = $Enums.EventType;
 export type EventSeverity = $Enums.EventSeverity;
+export type ConditionType = $Enums.ConditionType;
 
 export interface EventMeta {
   sessionId?: string;

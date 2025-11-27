@@ -1,19 +1,3 @@
-// // src/auth/guards/jwt-auth.guard.ts
-// import { ExecutionContext, Injectable } from '@nestjs/common';
-// import { AuthGuard } from '@nestjs/passport';
-
-// @Injectable()
-// export class JwtAuthGuard extends AuthGuard('jwt') {
-//   // can override handleRequest if custom logic needed
-//   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-//     if (err || !user) {
-//       return null; // let Nest handle unauthorized
-//     }
-//     return user;
-//   }
-// }
-
-// src/auth/guards/jwt-auth.guard.ts
 // src/auth/guards/jwt-auth.guard.ts
 import {
   ExecutionContext,
@@ -37,9 +21,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const ipAddress = req.ip;
     const userAgent = req.headers['user-agent'];
 
+    console.log('🔍 JwtAuthGuard canActivate called');
+    console.log('Authorization header:', req.headers.authorization);
+    console.log('URL:', req.url);
+
     try {
       const result = await super.canActivate(context);
       if (result) {
+        console.log('🔍 JwtAuthGuard returning true');
         return true;
       }
 
@@ -53,6 +42,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       // throw new UnauthorizedException('Unauthorized');
       throw new ClearCookiesUnauthorizedException('Unauthorized');
     } catch (error) {
+      console.log('🔍 JwtAuthGuard caught error:', error);
       await this.logAuthFailure(
         req,
         error,

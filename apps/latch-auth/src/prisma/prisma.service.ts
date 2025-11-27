@@ -24,15 +24,29 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  private currentTenantId?: string;
+
+  setTenantId(tenantId: string) {
+    this.currentTenantId = tenantId;
+  }
+
+  // Override or wrap queries to automatically include tenant scoping
+  async findWithTenantScoping(model: any, args: any, tenantId: string) {
+    return model.findMany({
+      ...args,
+      where: {
+        ...args.where,
+        tenantId, // Automatically enforce tenant isolation
+      }
+    });
+  }
+
   async onModuleInit() {
     await this.$connect();
   }
 
   async onModuleDestroy() {
-    await this.$disconnect(); // ✅ This WILL be awaited during shutdown
+    await this.$disconnect();
   }
 }

@@ -16,17 +16,40 @@ import type { Response } from 'express';
 import type { AuthenticatedRequest } from '../auth/types/auth.types';
 import { EventLogService } from '../events/event.service';
 import { SessionGuard } from '../auth/guards/session.guard';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
 
 @Controller('protected')
 @UseGuards(JwtAuthGuard, SessionGuard, TenantGuard)
 export class ProtectedController {
-  constructor(private eventLogService: EventLogService) {}
+  constructor(
+    private eventLogService: EventLogService,
+    private ipReputationService: IPReputationService,
+
+  ) {}
 
   @Get('me')
   async me(
     @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    if (ipAddress && ipAddress !== 'unknown' && await this.ipReputationService.isIPBlocked(ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: req.user.id,
+        tenantId: req.user.tenantId,
+        metadata: { 
+          reason: 'BLOCKED_IP_SENSITIVE_DATA_ACCESS_ATTEMPT',
+          endpoint: '/protected/me',
+          action: 'GET_USER_PROFILE',
+        },
+        ipAddress: ipAddress,
+        userAgent: req.headers['user-agent'],
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('Sensitive data access denied - IP address is blocked');
+    }
+
     // Add cache control headers
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -56,6 +79,24 @@ export class ProtectedController {
     // Instead, we can check if the user has a specific permission
     // But since we don't know the user's data model, let's make this endpoint optional
 
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    if (ipAddress && ipAddress !== 'unknown' && await this.ipReputationService.isIPBlocked(ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: req.user.id,
+        tenantId: req.user.tenantId,
+        metadata: { 
+          reason: 'BLOCKED_IP_AUDIT_TRAIL_ACCESS_ATTEMPT',
+          endpoint: '/protected/audit-trail',
+          action: 'GET_AUDIT_TRAIL',
+        },
+        ipAddress: ipAddress,
+        userAgent: req.headers['user-agent'],
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('Audit trail access denied - IP address is blocked');
+    }
+
     // For now, just log the access attempt
     await this.eventLogService.logEvent('AUDIT_TRAIL_ACCESS_ATTEMPTED', {
       userId: req.user.id,
@@ -78,6 +119,24 @@ export class ProtectedController {
     // Similarly, data export requires knowing the user's permissions
     // Since we don't know the user's data model, we'll make this optional too
 
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    if (ipAddress && ipAddress !== 'unknown' && await this.ipReputationService.isIPBlocked(ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: req.user.id,
+        tenantId: req.user.tenantId,
+        metadata: { 
+          reason: 'BLOCKED_IP_DATA_EXPORT_ATTEMPT',
+          endpoint: '/protected/export-data',
+          action: 'EXPORT_USER_DATA',
+        },
+        ipAddress: ipAddress,
+        userAgent: req.headers['user-agent'],
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('Data export denied - IP address is blocked');
+    }
+
     await this.eventLogService.logEvent('DATA_EXPORT_ATTEMPTED', {
       userId: req.user.id,
       tenantId: req.user.tenantId,
@@ -96,6 +155,24 @@ export class ProtectedController {
 
   @Get('security-status')
   async getSecurityStatus(@Req() req: AuthenticatedRequest) {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    if (ipAddress && ipAddress !== 'unknown' && await this.ipReputationService.isIPBlocked(ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: req.user.id,
+        tenantId: req.user.tenantId,
+        metadata: { 
+          reason: 'BLOCKED_IP_SECURITY_STATUS_CHECK_ATTEMPT',
+          endpoint: '/protected/security-status',
+          action: 'CHECK_SECURITY_STATUS',
+        },
+        ipAddress: ipAddress,
+        userAgent: req.headers['user-agent'],
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('Security status check denied - IP address is blocked');
+    }
+
     // Log security status check
     await this.eventLogService.logEvent('SECURITY_STATUS_CHECKED', {
       userId: req.user.id,
@@ -124,6 +201,24 @@ export class ProtectedController {
 
   @Get('verify-authentication')
   async verifyAuthentication(@Req() req: AuthenticatedRequest) {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    if (ipAddress && ipAddress !== 'unknown' && await this.ipReputationService.isIPBlocked(ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: req.user.id,
+        tenantId: req.user.tenantId,
+        metadata: { 
+          reason: 'BLOCKED_IP_AUTH_VERIFICATION_ATTEMPT',
+          endpoint: '/protected/verify-authentication',
+          action: 'VERIFY_AUTHENTICATION',
+        },
+        ipAddress: ipAddress,
+        userAgent: req.headers['user-agent'],
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('Authentication verification denied - IP address is blocked');
+    }
+
     // This endpoint is protected by JwtAuthGuard and TenantGuard
     // But we add an explicit check for additional security
 

@@ -33,6 +33,7 @@ enum EventType {
   USER_LIST_ACCESS_DENIED
   USER_PROFILE_UPDATE
   USER_PROFILE_UPDATE_FAILED
+  USER_LIST_ATTEMPTED
   ROLE_ACCESS_DENIED
   ROLE_ACCESS_GRANTED
   PRIVILEGE_ACCESS_DENIED
@@ -46,21 +47,50 @@ enum EventType {
   DATA_EXPORT_INITIATED
   DATA_EXPORTED
   SECURITY_STATUS_CHECKED
+  SECURITY_RATE_LIMIT
   AUTHENTICATION_VERIFICATION_FAILED
   AUTHENTICATION_VERIFIED
   LOGOUT_ATTEMPT_INVALID
+  ADMIN_VALIDATION_ERROR
+  UNAUTHORIZED_TENANT_CREATION_ATTEMPT
+  TENANT_CREATION_FAILED
+  INTERNAL_ERROR
 }
 
 enum EventSeverity {
   INFO
   SECURITY
+  CRITICAL
   ERROR
+}
+
+enum PermissionAction {
+  CREATE
+  READ
+  UPDATE  
+  DELETE
+  EXECUTE
+}
+
+enum ConditionType {
+  OWN_DATA_ONLY      
+  TENANT_DATA_ONLY   
+  TIME_BASED         
+  IP_RESTRICTED      
+  MFA_REQUIRED       
+  RATE_LIMITED      
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
 }
 
 model Tenant {
   id        String          @id @default(uuid())
   name      String
   slug      String          @unique
+  status    TenantStatus    @default(ACTIVE)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   users     User[]
@@ -77,6 +107,12 @@ model Tenant {
   MFAFactor MFAFactor[]
 
   BackupCode BackupCode[]
+
+  PermissionRule PermissionRule[]
+
+  Permission Permission[]
+
+  rateLimitProfile TenantRateLimitProfile?
 }
 
 model User {
@@ -99,9 +135,24 @@ model User {
   mfaFactors       MFAFactor[]
   backupCodes      BackupCode[]
   UsedRefreshToken UsedRefreshToken[]
+  PermissionAudit PermissionAudit[]
+  userPermissions  UserPermission[]
 
   @@unique([tenantId, phone]) // phone unique per tenant
   @@unique([tenantId, email])
+}
+
+model UserPermission {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  permissionId String
+  permission   Permission   @relation(fields: [permissionId], references: [id])
+  allowed      Boolean      @default(true)
+  grantedBy    String?      // "direct", "role_assignment", "inheritance"
+  grantedAt    DateTime     @default(now())
+  
+  @@unique([userId, permissionId])
 }
 
 model OTP {
@@ -131,7 +182,8 @@ model Session {
   lastActiveAt DateTime
   expiresAt    DateTime // aligned with refresh token expiry
   revoked      Boolean  @default(false)
-
+  revokedAt DateTime? 
+  updatedAt    DateTime @default(now())
   RefreshToken     RefreshToken[]
   UsedRefreshToken UsedRefreshToken[]
 }
@@ -170,6 +222,45 @@ model UsedRefreshToken {
   @@index([userId])
   @@index([tokenHash])
   @@index([refreshTokenId])
+}
+
+// IP blocking table
+model IPBlock {
+  id         String   @id @default(cuid())
+  ip         String
+  reason     String
+  blockedAt  DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([ip])
+  @@index([expiresAt])
+}
+
+// IP whitelist table
+model IPWhitelist {
+  id        String   @id @default(cuid())
+  ip        String
+  reason    String
+  addedAt   DateTime @default(now())
+  addedBy   String?  // admin user who added it
+
+  @@unique([ip])
+  @@index([addedAt])
+}
+
+// Reputation history (optional, for advanced tracking)
+model IPReputationHistory {
+  id         String   @id @default(cuid())
+  ip         String
+  score      Int
+  riskLevel  String   // 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  eventCounts Json?   // JSON object with event type counts
+  recordedAt DateTime @default(now())
+  source     String   // 'EVENT_LOG' | 'MANUAL_UPDATE' | 'SYSTEM_UPDATE'
+
+  @@index([ip, recordedAt])
+  @@index([recordedAt])
 }
 
 model Event {
@@ -213,18 +304,64 @@ model OAuthProvider {
   @@unique([tenantId, provider, providerUserId])
 }
 
-model Role {
-  id          String     @id @default(uuid())
+model Permission {
+  id          String   @id @default(uuid())
   tenantId    String
-  tenant      Tenant     @relation(fields: [tenantId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  name        String   // "manage_orders", "view_sensitive_data"
+  description String?
+  resource    String   // "orders", "users", "products"
+  action      PermissionAction
+  createdAt   DateTime @default(now())
+  
+  // Advanced permission features
+  conditions  PermissionCondition[]
+  rolePermissions RolePermission[]
+  
+  @@unique([tenantId, name])
+  PermissionAudit PermissionAudit[]
+  UserPermission UserPermission[]
+}
+
+model PermissionCondition {
+  id             String        @id @default(uuid())
+  permissionId   String
+  permission     Permission    @relation(fields: [permissionId], references: [id])
+  conditionType  ConditionType
+  value          Json?         // condition-specific value (IP range, time window, etc.)
+  description    String?
+  createdAt      DateTime      @default(now())
+}
+
+model Role {
+  id          String             @id @default(uuid())
+  tenantId    String
+  tenant      Tenant             @relation(fields: [tenantId], references: [id])
   name        String
   description String?
-  isSystem    Boolean    @default(false) // e.g., built-in ADMIN role
-  privileges  String[]   @default([]) // list of named permissions
-  userRoles   UserRole[]
-  createdAt   DateTime   @default(now())
+  isSystem    Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  
+ // Backward compatibility - keep existing privileges array
+  privileges  String[]           @default([]) // for legacy role-based permissions
 
-  @@unique([tenantId, name])
+  // Hierarchical roles (role inheritance)
+  parentRoleId String?
+  parentRole   Role?             @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  childRoles   Role[]            @relation("RoleHierarchy")
+  
+  // Permissions
+  permissions  RolePermission[]
+  userRoles    UserRole[]
+  
+  // Role metadata for advanced scenarios
+  priority      Int?             // for conflict resolution
+  isActive      Boolean          @default(true)
+  validFrom     DateTime?
+  validUntil    DateTime?
+  
+
+  TenantPolicy TenantPolicy[]
 }
 
 model UserRole {
@@ -233,6 +370,23 @@ model UserRole {
   user   User   @relation(fields: [userId], references: [id])
   roleId String
   role   Role   @relation(fields: [roleId], references: [id])
+  createdAt    DateTime        @default(now())
+  validFrom    DateTime 
+  validUntil   DateTime       
+}
+
+model RolePermission {
+  id           String          @id @default(uuid())
+  roleId       String
+  role         Role            @relation(fields: [roleId], references: [id])
+  permissionId String
+  permission   Permission      @relation(fields: [permissionId], references: [id])
+  allowed      Boolean         @default(true)
+  inherited    Boolean         @default(false) // from parent role
+  priority     Int?            // for conflict resolution
+  createdAt    DateTime        @default(now())
+  
+  @@unique([roleId, permissionId])
 }
 
 model MFAFactor {
@@ -260,13 +414,81 @@ model BackupCode {
   createdAt DateTime @default(now())
 }
 
+// For tenant-level permission policies
 model TenantPolicy {
   id                        String   @id @default(uuid())
   tenantId                  String   @unique
   tenant                    Tenant   @relation(fields: [tenantId], references: [id])
   requireMFA                Boolean  @default(false)
-  allowedFactors            Json? // ["SMS","TOTP","WEBAUTHN"]
+  allowedFactors            Json?
   privilegedUserMFARequired Boolean  @default(true)
+  
+  // New: Default permissions for new users
+  defaultRoleId             String?
+  defaultRole               Role?    @relation(fields: [defaultRoleId], references: [id])
+  
+  // New: Permission inheritance rules
+  roleInheritanceEnabled    Boolean  @default(true)
+  permissionConflictStrategy String @default("DENY_WINS") // "DENY_WINS", "ALLOW_WINS", "HIGHEST_PRIORITY"
+
+  customRateLimitProfileId  String?
+  customRateLimitProfile    TenantRateLimitProfile? @relation(fields: [customRateLimitProfileId], references: [id])
+  
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
+}
+
+model TenantRateLimitProfile {
+  id         String              @id @default(cuid())
+  tenantId   String              @unique
+  tenant     Tenant              @relation(fields: [tenantId], references: [id])
+  name       String              // e.g., 'standard', 'premium', 'enterprise'
+  limits     Json                // JSON object containing rate limit configs
+  isActive   Boolean             @default(true)
+  isDefault  Boolean             @default(false) // Mark as default profile
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+ 
+  tenantPolicies TenantPolicy[]
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([isDefault])
+}
+
+// For tracking permission usage and auditing
+model PermissionAudit {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  action       String   // "ATTEMPTED", "GRANTED", "DENIED"
+  resource     String   // actual resource accessed
+  resourceId   String?  // specific record ID
+  ipAddress    String?
+  userAgent    String?
+  reason       String?  // why permission was denied
+  createdAt    DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([permissionId, createdAt])
+  @@index([action])
+}
+
+// For dynamic permission evaluation
+model PermissionRule {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  name         String
+  description  String?
+  condition    Json     // JSON logic for when rule applies
+  effect       String   // "ALLOW", "DENY", "CONDITIONAL"
+  priority     Int      // execution order
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  
+  @@index([tenantId, priority])
 }

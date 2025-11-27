@@ -70,7 +70,75 @@ jobs:
           name: ci-results-lint-report
           path: apps/latch-auth/latch-auth-ci-artifacts/junit.xml
           if-no-files-found: ignore
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+        
+      - name: Install dependencies
+        working-directory: apps/latch-auth
+        run: bun install --frozen-lockfile
+        
+      - name: Run security audit
+        working-directory: apps/latch-auth
+        run: bun audit --audit-level moderate
+        
+      - name: Check for forbidden imports
+        working-directory: apps/latch-auth
+        run: |
+          echo "Checking for dangerous imports..."
+          DANGEROUS_IMPORTS=("child_process" "fs" "vm" "eval" "exec" "spawn" "require" "import")
+          for IMPORT in "${DANGEROUS_IMPORTS[@]}"; do
+            if grep -r "from.*$IMPORT\|require.*$IMPORT\|import.*$IMPORT" ./src --include="*.ts" --exclude-dir=node_modules; then
+              echo "❌ Found dangerous import: $IMPORT"
+               exit 1
+             fi
+          done
+          echo "✅ No dangerous imports found"        
+  coverage:
+    name: Coverage Validation
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: latch-auth-unit-results
+          path: apps/latch-auth/
+
+      - name: Check coverage thresholds
+        working-directory: apps/latch-auth
+        run: |
+          # Check if coverage meets minimum thresholds (80%)
+          if [ -f "coverage/lcov.info" ]; then
+            # Extract overall line coverage
+            COVERAGE=$(awk '/^LF:/ {lf=$2} /^LH:/ {lh=$2} END {printf "%.0f", (lh/lf)*100}' coverage/lcov.info)
+            echo "Current coverage: ${COVERAGE}%"
+            
+          if [ "$COVERAGE" -lt 80 ]; then
+            echo "❌ Coverage ${COVERAGE}% is below threshold 80%"
+            exit 1
+            fi
+            echo "✅ Coverage ${COVERAGE}% meets threshold"
+          else
+            echo "❌ Coverage report not found"
+            exit 1
+          fi
   unit:
     name: Unit Tests (fast)
     runs-on: ubuntu-latest
@@ -150,7 +218,58 @@ jobs:
           name: latch-auth-unit-results
           path: ${{ env.CI_ARTIFACT_PATH }}/junit.xml
           if-no-files-found: ignore
+  security-tests:
+      name: Security Tests
+      runs-on: ubuntu-latest
+      needs: [unit, e2e]  # Run after unit and e2e tests pass
+      services:
+        postgres:
+          image: postgres:15
+          env:
+            POSTGRES_USER: latch
+            POSTGRES_PASSWORD: latch123
+            POSTGRES_DB: latch_auth
+          ports: ["5432:5432"]
+          options: >-
+            --health-cmd="pg_isready -U latch -d latch_auth"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=5
+        redis:
+          image: redis:7
+          ports: ["6379:6379"]
+          options: >-
+            --health-cmd="redis-cli ping"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=5
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v4
 
+        - name: Setup Bun
+          uses: oven-sh/setup-bun@v1
+          with:
+            bun-version: latest
+
+        - name: Install dependencies
+          working-directory: apps/latch-auth
+          run: bun install --frozen-lockfile
+
+        - name: Generate Prisma client
+          working-directory: apps/latch-auth
+          run: bunx prisma generate
+
+        - name: Apply migrations
+          working-directory: apps/latch-auth
+          run: bunx prisma migrate deploy
+
+        - name: Run security-focused tests
+          working-directory: apps/latch-auth
+          run: |
+            # Run tests that specifically target security features
+            bunx jest --testPathPattern="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors
+          
   e2e:
     name: E2E + Coverage + Docker Validation
     runs-on: ubuntu-latest

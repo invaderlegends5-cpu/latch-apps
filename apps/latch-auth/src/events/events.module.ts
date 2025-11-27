@@ -25,18 +25,31 @@ import { EventLogService } from './event.service';
 import { EventController } from './event.controller';
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module'; // ✅ Add this
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
+import { TenantEventsController } from './tenant-events.controller';
+import { SecurityModule } from '@/security/security.module';
+import { BehavioralAnalysisService } from '@/behavioral-analysis/behavioral-analysis.service';
+import { DeviceFingerprintingService } from '@/device-fingerprinting/device-fingerprinting.service';
+import { BotDetectionService } from '@/bot-detection/bot-detection.service';
+import { RateLimitingService } from '@/rate-limiting/rate-limiting.service';
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     ConfigModule,
-    PrismaModule, // ✅ Add this
+    PrismaModule, 
+    SecurityModule
   ],
   providers: [
     EventLogService,
+    IPReputationService,
+    BehavioralAnalysisService,
+    DeviceFingerprintingService,
+    BotDetectionService,
+    RateLimitingService,
     // PrismaService, // 🚫 Remove
   ],
-  controllers: [EventController],
+  controllers: [EventController, TenantEventsController],
   exports: [EventLogService],
 })
 export class EventsModule {}

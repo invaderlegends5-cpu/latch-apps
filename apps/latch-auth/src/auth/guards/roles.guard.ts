@@ -28,15 +28,21 @@ export class RolesGuard implements CanActivate {
    *  @Roles('ADMIN')
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    console.log('[RolesGuard.canActivate] START - Method entered');
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-
-    if (!requiredRoles || requiredRoles.length === 0) return true;
+    console.log('[RolesGuard.canActivate] Required roles:', requiredRoles);
+    if (!requiredRoles || requiredRoles.length === 0) {
+      console.log('[RolesGuard.canActivate] No required roles, allowing access');  
+      return true
+    };
 
     const req = context.switchToHttp().getRequest<Request>(); // ✅ Typed
     const user = req.user;
+
+    console.log('[RolesGuard.canActivate] Request user object:', user);
 
     if (!user || typeof user !== 'object') {
       await this.logDenied(
@@ -53,6 +59,8 @@ export class RolesGuard implements CanActivate {
     const userId = user.sub ?? user.id;
     const tenantId = user.tenantId ?? user.tenant ?? null; // ✅ Simplified
 
+    console.log('[RolesGuard.canActivate] Extracted userId:', userId, 'and tenantId:', tenantId);
+
     if (!userId) {
       await this.logDenied(
         null,
@@ -65,6 +73,8 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Not authorized');
     }
 
+    this.logger.log(`RolesGuard querying Prisma for userId: ${userId}, tenantId: ${tenantId}`);
+
     // 🔐 Tenant-scoped role lookup
     const userRoles = await this.prisma.userRole.findMany({
       where: {
@@ -73,11 +83,20 @@ export class RolesGuard implements CanActivate {
       },
       include: { role: true },
     });
+    
+    console.log('[RolesGuard] Prisma query result for userId:', userId, 'tenantId:', tenantId, 'is:', userRoles);
+    this.logger.log(`RolesGuard received roles from Prisma: ${JSON.stringify(userRoles, null, 2)}`);
 
     const roleNames = userRoles.map((ur) => ur.role?.name).filter(Boolean);
 
-    const allowed = requiredRoles.some((r) => roleNames.includes(r));
+    console.log('[RolesGuard] Extracted role names:', roleNames); // ADD LOGGING HERE
+    console.log('[RolesGuard] Required roles for this endpoint:', requiredRoles);
 
+    this.logger.log(`RolesGuard checking required roles: [${requiredRoles.join(', ')}] against user roles: [${roleNames.join(', ')}]`);
+    console.log('[RolesGuard] Extracted role names:', roleNames);
+    console.log('[RolesGuard] Required roles for this endpoint:', requiredRoles); 
+    const allowed = requiredRoles.some((r) => roleNames.includes(r));
+    console.log('[RolesGuard] Is allowed (role check passed)?', allowed);
     if (!allowed) {
       await this.logDenied(
         userId,
@@ -86,6 +105,7 @@ export class RolesGuard implements CanActivate {
         'role_mismatch',
         req,
       );
+      console.log('[RolesGuard] DENYING ACCESS - insufficient permissions');
       this.logger.warn(
         `RolesGuard denied user=${userId} tenant=${tenantId ?? 'none'} required=${requiredRoles.join(',')}`,
       );
@@ -104,7 +124,7 @@ export class RolesGuard implements CanActivate {
       userAgent: req.headers['user-agent'] ?? 'unknown', // ✅ Fallback
       severity: 'INFO',
     });
-
+    console.log('[RolesGuard] ALLOWING ACCESS');
     return true;
   }
 

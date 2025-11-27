@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "EventSeverity" ADD VALUE 'CRITICAL';
+
+-- AlterEnum
+ALTER TYPE "EventType" ADD VALUE 'USER_LIST_ATTEMPTED';

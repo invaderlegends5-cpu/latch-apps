@@ -1,6 +1,6 @@
 // src/auth/auth.service.ts
 import { ClearCookiesUnauthorizedException } from './exceptions/clear-cookies-unauthorized.exception';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -11,6 +11,8 @@ import { EventLogService } from '../events/event.service';
 import { PrismaError } from './types/auth.types';
 import { RefreshToken, Session } from '@prisma/client';
 import { DevOtpStore } from '../utils/dev-otp-store';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
+import { DeviceFingerprintingService } from '@/device-fingerprinting/device-fingerprinting.service';
 type RequestContext = {
   ipAddress?: string | null;
   userAgent?: string | null;
@@ -28,9 +30,30 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private eventLogService: EventLogService,
+    private ipReputationService: IPReputationService,
+    private deviceFingerprintingService: DeviceFingerprintingService,
   ) {}
 
   async requestOtp(dto: RequestOtpDto, requestContext?: RequestContext) {
+  // Check if IP is blocked before processing request
+  if (requestContext?.ipAddress) {
+    if (await this.ipReputationService.isIPBlocked(requestContext.ipAddress)) {
+      await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+        userId: null,
+        tenantId: null,
+        metadata: { 
+          reason: 'BLOCKED_IP_ATTEMPT',
+          phone: maskPhone(dto.phone)
+        },
+        ipAddress: requestContext.ipAddress,
+        userAgent: requestContext?.userAgent ?? null,
+        severity: 'CRITICAL',
+      });
+      
+      throw new ForbiddenException('IP address is blocked due to suspicious activity');
+    }
+  }
+
     const { phone, tenantSlug } = dto;
     let tenant = await this.prisma.tenant.findUnique({
       where: { slug: tenantSlug ?? 'default' },
@@ -85,6 +108,24 @@ export class AuthService {
   }
 
   async verifyOtp(dto: VerifyOtpDto, requestContext?: RequestContext) {
+    if (requestContext?.ipAddress) {
+      if (await this.ipReputationService.isIPBlocked(requestContext.ipAddress)) {
+        await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+          userId: null,
+          tenantId: null,
+          metadata: { 
+            reason: 'BLOCKED_IP_ATTEMPT',
+            phone: maskPhone(dto.phone)
+          },
+          ipAddress: requestContext.ipAddress,
+          userAgent: requestContext?.userAgent ?? null,
+          severity: 'CRITICAL',
+        });
+        
+        throw new ForbiddenException('IP address is blocked due to suspicious activity');
+      }
+    }
+
     const { phone, code, tenantSlug } = dto;
     const tenant = await this.prisma.tenant.findUnique({
       where: { slug: tenantSlug ?? 'default' },
@@ -224,7 +265,15 @@ export class AuthService {
       userAgent: requestContext?.userAgent ?? null,
       severity: 'SECURITY',
     });
-
+    if (requestContext?.userAgent && requestContext?.ipAddress) {
+      await this.deviceFingerprintingService.analyzeDeviceFingerprint(
+        user.id,
+        session.id,
+        requestContext.userAgent,
+        requestContext.ipAddress,
+      );
+    }
+    
     return {
       ok: true,
       accessToken,
@@ -236,6 +285,24 @@ export class AuthService {
   }
 
   async getUserBySessionId(sessionId: string, requestContext?: RequestContext) {
+    if (requestContext?.ipAddress) {
+      if (await this.ipReputationService.isIPBlocked(requestContext.ipAddress)) {
+        await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+          userId: null,
+          tenantId: null,
+          metadata: { 
+            reason: 'BLOCKED_IP_ATTEMPT',
+            sessionId
+          },
+          ipAddress: requestContext.ipAddress,
+          userAgent: requestContext?.userAgent ?? null,
+          severity: 'CRITICAL',
+        });
+        
+        throw new ForbiddenException('IP address is blocked due to suspicious activity');
+      }
+    }
+
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
       include: { user: true },
@@ -275,6 +342,24 @@ export class AuthService {
     sessionId: string,
     requestContext?: RequestContext,
   ) {
+    if (requestContext?.ipAddress) {
+      if (await this.ipReputationService.isIPBlocked(requestContext.ipAddress)) {
+        await this.eventLogService.logEvent('SECURITY_CSRF_ERROR', {
+          userId: null,
+          tenantId: null,
+          metadata: { 
+            reason: 'BLOCKED_IP_ATTEMPT',
+            sessionId
+          },
+          ipAddress: requestContext.ipAddress,
+          userAgent: requestContext?.userAgent ?? null,
+          severity: 'CRITICAL',
+        });
+        
+        throw new ForbiddenException('IP address is blocked due to suspicious activity');
+      }
+    }
+
     const hashed = hashToken(refreshToken);
     const now = new Date();
 
@@ -494,7 +579,15 @@ export class AuthService {
       userAgent: requestContext?.userAgent ?? null,
       severity: 'INFO',
     });
-
+    if (requestContext?.userAgent && requestContext?.ipAddress) {
+      await this.deviceFingerprintingService.analyzeDeviceFingerprint(
+        session.user.id,
+        session.id,
+        requestContext.userAgent,
+        requestContext.ipAddress,
+      );
+    }
+    
     return {
       ok: true,
       accessToken,
@@ -577,6 +670,7 @@ export class AuthService {
   }
 
   async revokeSession(sessionId: string, requestContext?: RequestContext) {
+    
     await this.prisma.session.updateMany({
       where: { id: sessionId },
       data: { revoked: true },
@@ -612,7 +706,7 @@ export class AuthService {
     userId: string,
     requestContext?: RequestContext,
   ) {
-    const sessions = await this.prisma.session.findMany({
+      const sessions = await this.prisma.session.findMany({
       where: { userId },
       include: { user: true },
     });
