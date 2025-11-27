@@ -150,7 +150,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
-      redis:  # ← ADD THIS
+      redis: 
         image: redis:7
         ports: ["6379:6379"]
     outputs:
@@ -280,9 +280,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-            POSTGRES_USER: latch          # ← was 'postgres'
-            POSTGRES_PASSWORD: latch123   # ← was 'postgres'
-            POSTGRES_DB: latch_auth       # ← was 'latchdb'
+            POSTGRES_USER: latch          
+            POSTGRES_PASSWORD: latch123   
+            POSTGRES_DB: latch_auth       
         ports: ["5432:5432"]
         options: >-
           --health-cmd="pg_isready -U latch -d latch_auth"  
