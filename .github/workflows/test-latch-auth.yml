@@ -93,7 +93,7 @@ jobs:
           echo "✅ Mock seed verified — tenants exist."
       - name: Run Unit Tests
         working-directory: apps/latch-auth
-        run: npx jest --ci --no-colors
+        run: npx jest --ci --no-colors --forceExit
 
       # 🧩 Integration Boot Check
       - name: Docker Build (Mock Local API)

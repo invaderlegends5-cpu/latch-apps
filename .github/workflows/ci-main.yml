@@ -176,7 +176,7 @@ jobs:
         mkdir -p latch-auth-ci-artifacts
         bun install --frozen-lockfile
         npx prisma generate
-        bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
+        bunx jest --ci --runInBand --no-colors --coverage --forceExit 2>&1 | tee test-output.log
                   
     - name: Extract Coverage from Log
       id: coverage
@@ -268,7 +268,7 @@ jobs:
           working-directory: apps/latch-auth
           run: |
             # Run tests that specifically target security features
-            bunx jest --testPathPattern="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors
+            bunx jest --testPathPattern="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors --forceExit
           
   e2e:
     name: E2E + Coverage + Docker Validation

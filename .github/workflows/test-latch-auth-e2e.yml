@@ -180,7 +180,7 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           mkdir -p ${{ env.CI_ARTIFACT_PATH }}
-          bunx jest --ci --testEnvironment node \
+          bunx jest --ci --testEnvironment node --forceExit \
             --reporters=default \
             --reporters=jest-junit \
             --outputFile=${{ env.CI_ARTIFACT_PATH }}/junit.xml \
