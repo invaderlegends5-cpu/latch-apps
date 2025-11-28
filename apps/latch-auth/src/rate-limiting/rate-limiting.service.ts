@@ -586,7 +586,7 @@ export class RateLimitingService implements OnModuleInit, OnModuleDestroy {
                 data: {
                     id: defaultProfile.tenantId,
                     name: `Default Tenant for Profile ${defaultProfile.name}`,
-                    slug: `Default Tenant for Profile ${defaultProfile.slug}`,
+                    slug: `Add slug`,
                     // Add any other required fields for your Tenant model
                 },
             });
