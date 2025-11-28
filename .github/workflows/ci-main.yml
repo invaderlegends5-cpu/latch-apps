@@ -328,10 +328,14 @@ jobs:
 
       - name: Apply Prisma Migrations
         working-directory: apps/latch-auth
+        env: # <--- ADD THIS ENV BLOCK
+          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
         run: npx prisma migrate deploy
 
       - name: Run Prisma Seed (Mock)
         working-directory: apps/latch-auth
+        env: # <--- ADD THIS ENV BLOCK
+          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
         run: bun run prisma:seed
 
       - name: Verify Seed Presence
@@ -342,9 +346,14 @@ jobs:
                 
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
+          # !!! CRITICAL FIX: Inject the correct DATABASE_URL for the test runner !!!
+        env:
+          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
+          REDIS_URL: redis://redis:6379 
         run: |
           mkdir -p apps/latch-auth/latch-auth-ci-artifacts
           timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
+  
       
       - name: Debug- Check coverage output
         working-directory: apps/latch-auth
