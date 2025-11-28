@@ -221,6 +221,21 @@ beforeAll(async () => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [TestAppModule], // Ensure AppModule provides JwtStrategy and PassportModule
   })
+  .overrideProvider('RedisService') // or whatever your Redis service is called
+.useValue({
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  exists: jest.fn(),
+  // Add other methods as needed
+})
+.overrideProvider('SessionService') // if you have this service
+.useValue({
+  getSession: jest.fn(),
+  setSession: jest.fn(),
+  deleteSession: jest.fn(),
+  // Add other methods as needed
+})
   .overrideProvider(PrismaService)
   .useValue({
     session: {
@@ -345,6 +360,7 @@ beforeAll(async () => {
       delete: jest.fn(),
       upsert: jest.fn(),
     },
+
     // Add other required methods
     $connect: jest.fn(),
     $disconnect: jest.fn(),
