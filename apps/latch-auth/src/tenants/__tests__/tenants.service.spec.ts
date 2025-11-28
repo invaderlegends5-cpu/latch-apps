@@ -79,9 +79,20 @@ describe('TenantsService', () => {
               count: jest.fn(),
             },
             // Simple transaction mock that delegates to the main prisma instance
-            $transaction: jest.fn().mockImplementation(async (callback) => {
-              return await callback(prisma);
-            }),
+            // $transaction: jest.fn().mockImplementation(async (callback) => {
+            //   return await callback(prisma);
+            // }),
+
+            $transaction: jest.fn().mockImplementation(async (cb) => cb({
+              tenant: prisma.tenant,
+              role: prisma.role,
+              tenantPolicy: prisma.tenantPolicy,
+              event: prisma.event,
+              user: prisma.user,
+              session: prisma.session,
+              permission: prisma.permission,
+            })),
+
           },
         },
         {

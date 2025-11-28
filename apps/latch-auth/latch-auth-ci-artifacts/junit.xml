@@ -1,73 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="7" failures="4" errors="0" time="119.603">
-  <testsuite name="TenantsController (e2e)" errors="0" failures="4" skipped="0" timestamp="2025-11-27T06:40:04" time="104.332" tests="7">
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject non-SUPER_ADMIN users with 401 Unauthorized (due to security mapping)" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject non-SUPER_ADMIN users with 401 Unauthorized (due to security mapping)" time="6.299">
-      <failure>Error: thrown: &quot;Exceeded timeout of 5000 ms for a test.
-Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.&quot;
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:184:5
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:183:3
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:10:1)
-    at Runtime._execModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:1268:24)
-    at Runtime._loadModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:944:12)
-    at Runtime.requireModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:832:12)
-    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:95:13)
-    at processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:275:16)
-    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:343:7)</failure>
+<testsuites name="jest tests" tests="13" failures="0" errors="0" time="7.055">
+  <testsuite name="Admin Guard Integration Tests" errors="0" failures="0" skipped="0" timestamp="2025-11-28T05:24:31" time="6.582" tests="13">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" time="0.283">
     </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should allow SUPER_ADMIN users to create tenants" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should allow SUPER_ADMIN users to create tenants" time="0.323">
-      <failure>Error: connect ECONNRESET 127.0.0.1:36419
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
-    at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17)</failure>
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" time="0.137">
     </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests without valid authentication" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests without valid authentication" time="0.094">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" time="0.076">
     </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests with invalid CSRF tokens" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests with invalid CSRF tokens" time="0.358">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" time="0.087">
     </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow SUPER_ADMIN to list all tenants" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow SUPER_ADMIN to list all tenants" time="8.123">
-      <failure>Error: thrown: &quot;Exceeded timeout of 5000 ms for a test.
-Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.&quot;
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:312:5
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:311:3
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:10:1)
-    at Runtime._execModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:1268:24)
-    at Runtime._loadModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:944:12)
-    at Runtime.requireModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:832:12)
-    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:95:13)
-    at processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:275:16)
-    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:343:7)</failure>
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" name="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" time="0.119">
     </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow ADMIN to list tenants with tenant isolation" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow ADMIN to list tenants with tenant isolation" time="5.052">
-      <failure>Error: thrown: &quot;Exceeded timeout of 5000 ms for a test.
-Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.&quot;
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:354:5
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:311:3
-    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)
-    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)
-    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:10:1)
-    at Runtime._execModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:1268:24)
-    at Runtime._loadModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:944:12)
-    at Runtime.requireModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:832:12)
-    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:95:13)
-    at processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:275:16)
-    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:343:7)</failure>
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" time="0.632">
     </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should reject regular users from listing all tenants" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should reject regular users from listing all tenants" time="0.067">
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" time="0.224">
     </testcase>
-    <testcase classname=" Test execution failure: could be caused by test hooks like &apos;afterAll&apos;." name=" Test execution failure: could be caused by test hooks like &apos;afterAll&apos;." time="0">
-      <failure>{&quot;message&quot;:&quot;&quot;,&quot;stack&quot;:&quot;Error: thrown: \&quot;Exceeded timeout of 5000 ms for a hook.\nAdd a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.\&quot;\n    at /home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:399:3\n    at _dispatchDescribe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:604:26)\n    at describe (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/jestAdapterInit.js:572:44)\n    at Object.&lt;anonymous&gt; (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/src/tenants/__tests__/tenants.e2e.spec.ts:10:1)\n    at Runtime._execModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:1268:24)\n    at Runtime._loadModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:944:12)\n    at Runtime.requireModule (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runtime/build/index.js:832:12)\n    at jestAdapter (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-circus/build/runner.js:95:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runTestInternal (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:275:16)\n    at runTest (/home/tariq/Documents/Latch/latch-apps/apps/latch-auth/node_modules/jest-runner/build/index.js:343:7)&quot;}</failure>
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" time="0.114">
+    </testcase>
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" time="0.128">
+    </testcase>
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" time="0.198">
+    </testcase>
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" time="0.157">
+    </testcase>
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" time="0.159">
+    </testcase>
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" time="0.144">
     </testcase>
   </testsuite>
 </testsuites>

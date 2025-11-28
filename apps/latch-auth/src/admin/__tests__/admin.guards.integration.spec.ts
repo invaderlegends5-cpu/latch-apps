@@ -8,6 +8,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { EventLogService } from '@/events/event.service';
 import * as jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import { Request, Response, NextFunction } from 'express'; // Import Express types for middleware
+import { TestAppModule } from '@/tests/test-app.module';
 
 // Define a type for the token payload if needed for clarity
 interface JwtPayload {
@@ -55,7 +56,7 @@ describe('Admin Guard Integration Tests', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule], // Ensure AppModule provides JwtStrategy and PassportModule
+      imports: [TestAppModule], // Ensure AppModule provides JwtStrategy and PassportModule
     })
     .overrideProvider(PrismaService)
     .useValue({
