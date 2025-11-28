@@ -13,190 +13,154 @@ describe('TenantsController (e2e)', () => {
   let prisma: PrismaService;
   let tenantsService: TenantsService;
 
-  // beforeAll(async () => {
-  //   // Set the environment variable for JWT secret before app initialization
-  //   process.env.JWT_SECRET = 'dev_jwt_secret_change_me';
-  //   // Set the same COOKIE_SECRET as in your main.ts
-  //   process.env.COOKIE_SECRET = process.env.COOKIE_SECRET || 'dev_cookie_secret';
-
-  //   const moduleFixture: TestingModule = await Test.createTestingModule({
-  //     imports: [AppModule],
-  //   })
-  //   .overrideProvider(PrismaService)
-  //   .useValue({
-  //     session: {
-  //       findUnique: jest.fn((args: any) => {
-  //         console.log('🔍 Prisma session findUnique called with:', args); // Debug log
-  //         const requestedId = args.where?.id;
-  //         console.log('🔍 Looking for session ID:', requestedId);
-          
-  //         if (requestedId === 'session-id-super') {
-  //           return Promise.resolve({
-  //             id: 'session-id-super',
-  //             csrfToken: 'valid-csrf-token',
-  //             userId: 'super-admin-id',
-  //             tenantId: 'system-tenant',
-  //             revoked: false,
-  //             expiresAt: new Date(Date.now() + 100000),
-  //             ipAddress: '127.0.0.1',
-  //             userAgent: 'test-agent',
-  //             lastActiveAt: new Date(),
-  //             createdAt: new Date(),
-  //             updatedAt: new Date(),
-  //             user: { id: 'super-admin-id', phone: '1234567890', tenantId: 'system-tenant' }
-  //           });
-  //         } else if (requestedId === 'session-id') {
-  //           return Promise.resolve({
-  //             id: 'session-id',
-  //             csrfToken: 'valid-csrf-token',
-  //             userId: 'admin-id',
-  //             tenantId: 'tenant-123',
-  //             revoked: false,
-  //             expiresAt: new Date(Date.now() + 100000),
-  //             ipAddress: '127.0.0.1',
-  //             userAgent: 'test-agent',
-  //             lastActiveAt: new Date(),
-  //             createdAt: new Date(),
-  //             updatedAt: new Date(),
-  //             user: { id: 'admin-id', phone: '1234567890', tenantId: 'tenant-123' }
-  //           });
-  //         } else if (requestedId === 'session-id-user') {
-  //           return Promise.resolve({
-  //             id: 'session-id-user',
-  //             csrfToken: 'valid-csrf-token',
-  //             userId: 'user-id',
-  //             tenantId: 'tenant-456',
-  //             revoked: false,
-  //             expiresAt: new Date(Date.now() + 100000),
-  //             ipAddress: '127.0.0.1',
-  //             userAgent: 'test-agent',
-  //             lastActiveAt: new Date(),
-  //             createdAt: new Date(),
-  //             updatedAt: new Date(),
-  //             user: { id: 'user-id', phone: '1234567890', tenantId: 'tenant-456' }
-  //           });
-  //         }
-          
-  //         return Promise.resolve(null);
-  //       }),
-  //       findMany: jest.fn().mockResolvedValue([]),
-  //     },
-  //     userRole: {
-  //       // Add logging to the default mock for userRole.findMany
-  //       findMany: jest.fn((args: any) => {
-  //         console.log('🔍 Prisma userRole.findMany called with:', args); // NEW LOG
-  //         // The default mock returns an empty array, which is likely the cause of 403s
-  //         console.log('🔍 Prisma userRole.findMany returning: [] (default)'); // NEW LOG
-  //         return Promise.resolve([]);
-  //       }),
-  //     },
-  //     tenant: {
-  //       findMany: jest.fn(),
-  //       findUnique: jest.fn(() => Promise.resolve({
-  //         id: 'system-tenant',
-  //         slug: 'system-tenant',
-  //         name: 'System Tenant',
-  //         status: 'ACTIVE',
-  //         branding: {},
-  //         createdAt: new Date(),
-  //         updatedAt: new Date()
-  //       })),
-  //       count: jest.fn(() => Promise.resolve(10)),
-  //   // ADD THE MISSING create METHOD
-  //   create: jest.fn((args: any) => {
-  //     // Mock tenant creation - return the tenant data with an ID
-  //     return Promise.resolve({
-  //       id: 'new-tenant-id-' + Date.now(), // Generate a unique ID
-  //       name: args.data.name,
-  //       slug: args.data.slug,
-  //       status: args.data.status || 'ACTIVE',
-  //       branding: args.data.branding || {},
-  //       createdAt: new Date(),
-  //       updatedAt: new Date(),
-  //     });
-  //   }),
-  //   update: jest.fn(),
-  //   delete: jest.fn(),
-  //     },
-  //     tenantRateLimitProfile: {
-  //       findFirst: jest.fn().mockResolvedValue(null),
-  //       findMany: jest.fn().mockResolvedValue([]),
-  //       create: jest.fn(),
-  //       update: jest.fn(),
-  //       delete: jest.fn(),
-  //       // Add other methods as needed by RateLimitingService
-  //     },
-  //     event: {
-  //       findMany: jest.fn().mockResolvedValue([]),
-  //       findUnique: jest.fn(),
-  //       findFirst: jest.fn(),
-  //       create: jest.fn(),
-  //       update: jest.fn(),
-  //       delete: jest.fn(),
-  //       count: jest.fn(),
-  //     },
-  //     iPBlock: {
-  //       findFirst: jest.fn().mockResolvedValue(null), // Return null if not found
-  //       findMany: jest.fn().mockResolvedValue([]),
-  //       create: jest.fn(),
-  //       update: jest.fn(),
-  //       delete: jest.fn(),
-  //       upsert: jest.fn(),
-  //     },
-  //     // Add other required methods
-  //     $connect: jest.fn(),
-  //     $disconnect: jest.fn(),
-  //     user: {
-  //       findUnique: jest.fn(),
-  //     },
-  //     role: {
-  //       findMany: jest.fn(),
-  //     }
-  //   })
-  //   .compile();
-
-  //   app = moduleFixture.createNestApplication();
-    
-  //   // Apply the cookie parser middleware BEFORE the validation pipe
-  //   app.use(cookieParser(process.env.COOKIE_SECRET));
-    
-  //   // Add validation pipe globally like in main.ts
-  //   app.useGlobalPipes(new ValidationPipe({
-  //     whitelist: true,
-  //     forbidNonWhitelisted: true,
-  //     transform: true,
-  //   }));
-    
-  //   await app.init();
-    
-  //   jwtService = moduleFixture.get<JwtService>(JwtService);
-  //   prisma = moduleFixture.get<PrismaService>(PrismaService);
-  //   tenantsService = moduleFixture.get<TenantsService>(TenantsService);
-  // });
-
-
-beforeAll(async () => {
-    // Set environment variables that the application relies on for startup
+  beforeAll(async () => {
+    // Set the environment variable for JWT secret before app initialization
     process.env.JWT_SECRET = 'dev_jwt_secret_change_me';
+    // Set the same COOKIE_SECRET as in your main.ts
     process.env.COOKIE_SECRET = process.env.COOKIE_SECRET || 'dev_cookie_secret';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-    // !!! REMOVE THE ENTIRE OVERRIDE BLOCK STARTING HERE !!!
-    /*.overrideProvider(PrismaService)
+    .overrideProvider(PrismaService)
     .useValue({
-      // ... all your extensive mocks are removed ...
-    })*/
-    // !!! REMOVE THE ENTIRE OVERRIDE BLOCK ENDING HERE !!!
+      session: {
+        findUnique: jest.fn((args: any) => {
+          console.log('🔍 Prisma session findUnique called with:', args); // Debug log
+          const requestedId = args.where?.id;
+          console.log('🔍 Looking for session ID:', requestedId);
+          
+          if (requestedId === 'session-id-super') {
+            return Promise.resolve({
+              id: 'session-id-super',
+              csrfToken: 'valid-csrf-token',
+              userId: 'super-admin-id',
+              tenantId: 'system-tenant',
+              revoked: false,
+              expiresAt: new Date(Date.now() + 100000),
+              ipAddress: '127.0.0.1',
+              userAgent: 'test-agent',
+              lastActiveAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              user: { id: 'super-admin-id', phone: '1234567890', tenantId: 'system-tenant' }
+            });
+          } else if (requestedId === 'session-id') {
+            return Promise.resolve({
+              id: 'session-id',
+              csrfToken: 'valid-csrf-token',
+              userId: 'admin-id',
+              tenantId: 'tenant-123',
+              revoked: false,
+              expiresAt: new Date(Date.now() + 100000),
+              ipAddress: '127.0.0.1',
+              userAgent: 'test-agent',
+              lastActiveAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              user: { id: 'admin-id', phone: '1234567890', tenantId: 'tenant-123' }
+            });
+          } else if (requestedId === 'session-id-user') {
+            return Promise.resolve({
+              id: 'session-id-user',
+              csrfToken: 'valid-csrf-token',
+              userId: 'user-id',
+              tenantId: 'tenant-456',
+              revoked: false,
+              expiresAt: new Date(Date.now() + 100000),
+              ipAddress: '127.0.0.1',
+              userAgent: 'test-agent',
+              lastActiveAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              user: { id: 'user-id', phone: '1234567890', tenantId: 'tenant-456' }
+            });
+          }
+          
+          return Promise.resolve(null);
+        }),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      userRole: {
+        // Add logging to the default mock for userRole.findMany
+        findMany: jest.fn((args: any) => {
+          console.log('🔍 Prisma userRole.findMany called with:', args); // NEW LOG
+          // The default mock returns an empty array, which is likely the cause of 403s
+          console.log('🔍 Prisma userRole.findMany returning: [] (default)'); // NEW LOG
+          return Promise.resolve([]);
+        }),
+      },
+      tenant: {
+        findMany: jest.fn(),
+        findUnique: jest.fn(() => Promise.resolve({
+          id: 'system-tenant',
+          slug: 'system-tenant',
+          name: 'System Tenant',
+          status: 'ACTIVE',
+          branding: {},
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })),
+        count: jest.fn(() => Promise.resolve(10)),
+    // ADD THE MISSING create METHOD
+    create: jest.fn((args: any) => {
+      // Mock tenant creation - return the tenant data with an ID
+      return Promise.resolve({
+        id: 'new-tenant-id-' + Date.now(), // Generate a unique ID
+        name: args.data.name,
+        slug: args.data.slug,
+        status: args.data.status || 'ACTIVE',
+        branding: args.data.branding || {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }),
+    update: jest.fn(),
+    delete: jest.fn(),
+      },
+      tenantRateLimitProfile: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        // Add other methods as needed by RateLimitingService
+      },
+      event: {
+        findMany: jest.fn().mockResolvedValue([]),
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
+      },
+      iPBlock: {
+        findFirst: jest.fn().mockResolvedValue(null), // Return null if not found
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        upsert: jest.fn(),
+      },
+      // Add other required methods
+      $connect: jest.fn(),
+      $disconnect: jest.fn(),
+      user: {
+        findUnique: jest.fn(),
+      },
+      role: {
+        findMany: jest.fn(),
+      }
+    })
     .compile();
 
     app = moduleFixture.createNestApplication();
     
     // Apply the cookie parser middleware BEFORE the validation pipe
-    // Make sure these match exactly what you have in your src/main.ts
     app.use(cookieParser(process.env.COOKIE_SECRET));
     
+    // Add validation pipe globally like in main.ts
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
@@ -205,12 +169,10 @@ beforeAll(async () => {
     
     await app.init();
     
-    // You can still get the real services if you need them for non-mocked setup/teardown
-    // jwtService = moduleFixture.get<JwtService>(JwtService);
-    // tenantsService = moduleFixture.get<TenantsService>(TenantsService);
-    // prisma = moduleFixture.get<PrismaService>(PrismaService); 
+    jwtService = moduleFixture.get<JwtService>(JwtService);
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    tenantsService = moduleFixture.get<TenantsService>(TenantsService);
   });
-
 
   beforeEach(async () => {
     // Clear any existing data or mocks before each test
