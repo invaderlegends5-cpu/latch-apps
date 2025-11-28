@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="13" failures="0" errors="0" time="90.111">
-  <testsuite name="Admin Guard Integration Tests" errors="0" failures="0" skipped="0" timestamp="2025-11-28T07:10:22" time="87.765" tests="13">
-    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" time="0.41">
+<testsuites name="jest tests" tests="13" failures="0" errors="0" time="205.812">
+  <testsuite name="Admin Guard Integration Tests" errors="0" failures="0" skipped="0" timestamp="2025-11-28T09:21:21" time="201.696" tests="13">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests without JWT token" time="1.994">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" time="0.486">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with invalid JWT token (e.g., session not found)" time="0.579">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" time="0.047">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with expired JWT token" time="0.051">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" time="0.047">
+    <testcase classname="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" name="Admin Guard Integration Tests Authentication Guard Tests should return 401 for requests with revoked JWT token" time="0.031">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" name="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" time="0.253">
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" name="Admin Guard Integration Tests Role Guard Tests should reject non-ADMIN/SUPER_ADMIN users with ForbiddenException" time="0.304">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" time="1.122">
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow ADMIN users to access ADMIN endpoints" time="2.763">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" time="0.264">
+    <testcase classname="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" name="Admin Guard Integration Tests Role Guard Tests should allow SUPER_ADMIN users to access ADMIN endpoints" time="0.191">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" time="0.096">
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests without CSRF token" time="0.156">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" time="0.097">
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should reject requests with mismatched CSRF tokens" time="0.041">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" time="0.22">
+    <testcase classname="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" name="Admin Guard Integration Tests CSRF Guard Tests should allow requests with valid CSRF tokens" time="0.133">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" time="0.174">
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with invalid tenant slug format" time="0.062">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" time="0.094">
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with non-existent tenant" time="0.388">
     </testcase>
-    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" time="0.128">
+    <testcase classname="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" name="Admin Guard Integration Tests Tenant Guard Tests should reject requests with tenant mismatch" time="0.087">
     </testcase>
   </testsuite>
 </testsuites>
