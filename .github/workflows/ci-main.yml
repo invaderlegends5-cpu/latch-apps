@@ -176,7 +176,7 @@ jobs:
         mkdir -p latch-auth-ci-artifacts
         bun install --frozen-lockfile
         npx prisma generate
-        bunx jest --ci --runInBand --no-colors --coverage --forceExit 2>&1 | tee test-output.log
+        bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
                   
     - name: Extract Coverage from Log
       id: coverage
@@ -268,7 +268,7 @@ jobs:
           working-directory: apps/latch-auth
           run: |
             # Run tests that specifically target security features
-            bunx jest --testPathPattern="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors --forceExit
+            bunx jest --testPathPattern="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors
           
   e2e:
     name: E2E + Coverage + Docker Validation
@@ -322,20 +322,34 @@ jobs:
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
 
+      - name: Install Postgres Client Tools # <-- Add this to use pg_isready
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres to be ready # <-- Add this step
+        run: |
+          until pg_isready -h postgres -p 5432 -U latch; do
+            echo "Waiting for database service 'postgres'..."
+            sleep 2
+          done
+          echo "Database 'postgres' is ready and accepting connections."
+
+      - name: Apply Prisma Migrations
+        working-directory: apps/latch-auth
+        env:
+          # This should use 'postgres' if that's where your services run
+          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth 
+        run: npx prisma migrate deploy
+
       - name: Generate Prisma Client
         working-directory: apps/latch-auth
         run: npx prisma generate
 
       - name: Apply Prisma Migrations
         working-directory: apps/latch-auth
-        env: # <--- ADD THIS ENV BLOCK
-          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
         run: npx prisma migrate deploy
 
       - name: Run Prisma Seed (Mock)
         working-directory: apps/latch-auth
-        env: # <--- ADD THIS ENV BLOCK
-          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
         run: bun run prisma:seed
 
       - name: Verify Seed Presence
@@ -346,14 +360,9 @@ jobs:
                 
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
-          # !!! CRITICAL FIX: Inject the correct DATABASE_URL for the test runner !!!
-        env:
-          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth
-          REDIS_URL: redis://redis:6379 
         run: |
           mkdir -p apps/latch-auth/latch-auth-ci-artifacts
           timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
-  
       
       - name: Debug- Check coverage output
         working-directory: apps/latch-auth
