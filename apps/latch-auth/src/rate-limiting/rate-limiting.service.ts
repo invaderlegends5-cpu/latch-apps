@@ -571,30 +571,52 @@ export class RateLimitingService implements OnModuleInit, OnModuleDestroy {
    */
   private async ensureDefaultProfiles() {
     for (const defaultProfile of this.defaultProfiles) {
-      const existing = await this.prisma.tenantRateLimitProfile.findFirst({
-        where: { 
-          tenantId: defaultProfile.tenantId,
-          name: defaultProfile.name,
-        },
-      });
-
-      if (!existing) {
-        await this.prisma.tenantRateLimitProfile.create({
-          data: {
-            id: `default-${defaultProfile.name}-${crypto.randomUUID()}`,
-            tenantId: defaultProfile.tenantId,
-            name: defaultProfile.name,
-            limits: defaultProfile.limits as any, // Cast to JSON for Prisma
-            isActive: defaultProfile.isActive,
-            createdAt: defaultProfile.createdAt,
-            updatedAt: defaultProfile.updatedAt,
-          },
+        
+        // 1. ENSURE THE PARENT TENANT RECORD EXISTS FIRST
+        // This logic assumes you have the necessary data for the tenant
+        // If the tenant doesn't exist, create a minimal tenant record:
+        let tenant = await this.prisma.tenant.findUnique({
+            where: { id: defaultProfile.tenantId },
         });
-        this.logger.log(`Created default rate limit profile: ${defaultProfile.name}`);
-      }
-    }
-  }
 
+        if (!tenant) {
+            this.logger.log(`Tenant ${defaultProfile.tenantId} not found, creating a placeholder tenant.`);
+            // Create a minimal parent tenant record first
+            tenant = await this.prisma.tenant.create({
+                data: {
+                    id: defaultProfile.tenantId,
+                    name: `Default Tenant for Profile ${defaultProfile.name}`,
+                    slug: `Default Tenant for Profile ${defaultProfile.slug}`,
+                    // Add any other required fields for your Tenant model
+                },
+            });
+        }
+
+
+        // 2. Now attempt to create the profile for the guaranteed-existing tenant
+        const existing = await this.prisma.tenantRateLimitProfile.findFirst({
+            where: { 
+                tenantId: defaultProfile.tenantId,
+                name: defaultProfile.name,
+            },
+        });
+
+        if (!existing) {
+            await this.prisma.tenantRateLimitProfile.create({
+                data: {
+                    id: `default-${defaultProfile.name}-${crypto.randomUUID()}`,
+                    tenantId: tenant.id, // Use the now-guaranteed tenant ID
+                    name: defaultProfile.name,
+                    limits: defaultProfile.limits as any,
+                    isActive: defaultProfile.isActive,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+            this.logger.log(`Created default rate limit profile: ${defaultProfile.name}`);
+        }
+    }
+}
   /**
    * Warm up cache with existing profiles
    */

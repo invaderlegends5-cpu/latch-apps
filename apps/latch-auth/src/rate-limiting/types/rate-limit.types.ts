@@ -4,6 +4,7 @@ export interface TenantRateLimitProfile {
     id: string;
     tenantId: string;
     name: string; // e.g., 'standard', 'premium', 'enterprise'
+    slug?: string;
     limits: {
       otpRequest: RateLimitConfig;
       otpVerify: RateLimitConfig;
