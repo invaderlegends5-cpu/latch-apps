@@ -9,6 +9,12 @@ import { EventLogService } from '@/events/event.service';
 import * as jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import { Request, Response, NextFunction } from 'express'; // Import Express types for middleware
 import { TestAppModule } from '@/tests/test-app.module';
+import { RateLimitingService } from '@/rate-limiting/rate-limiting.service';
+import { SecurityMonitoringService } from '@/security/security-monitor.service';
+import { BehavioralAnalysisService } from '@/behavioral-analysis/behavioral-analysis.service';
+import { BotDetectionService } from '@/bot-detection/bot-detection.service';
+import { DeviceFingerprintingService } from '@/device-fingerprinting/device-fingerprinting.service';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
 
 // Define a type for the token payload if needed for clarity
 interface JwtPayload {
@@ -54,162 +60,356 @@ describe('Admin Guard Integration Tests', () => {
     return jwt.sign(payload, secret);
   };
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [TestAppModule], // Ensure AppModule provides JwtStrategy and PassportModule
-    })
-    .overrideProvider(PrismaService)
-    .useValue({
-  session: {
-    findUnique: jest.fn((args: any) => {
-      // Your existing session mock logic
-      const requestedId = args.where?.id;
-      if (requestedId === 'session-id-super') {
-        return Promise.resolve({
-          id: 'session-id-super',
-          csrfToken: 'valid-csrf-token',
-          userId: 'super-admin-id',
-          tenantId: 'system-tenant',
-          revoked: false,
-          expiresAt: new Date(Date.now() + 100000),
-          ipAddress: '127.0.0.1',
-          userAgent: 'test-agent',
-          lastActiveAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          user: { id: 'super-admin-id', phone: '1234567890', tenantId: 'system-tenant' }
-        });
-      } else if (requestedId === 'session-id') {
-        return Promise.resolve({
-          id: 'session-id',
-          csrfToken: 'valid-csrf-token',
-          userId: 'admin-id',
-          tenantId: 'tenant-123',
-          revoked: false,
-          expiresAt: new Date(Date.now() + 100000),
-          ipAddress: '127.0.0.1',
-          userAgent: 'test-agent',
-          lastActiveAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          user: { id: 'admin-id', phone: '1234567890', tenantId: 'tenant-123' }
-        });
-      } else if (requestedId === 'session-id-user') {
-        return Promise.resolve({
-          id: 'session-id-user',
-          csrfToken: 'valid-csrf-token',
-          userId: 'user-id',
-          tenantId: 'tenant-456',
-          revoked: false,
-          expiresAt: new Date(Date.now() + 100000),
-          ipAddress: '127.0.0.1',
-          userAgent: 'test-agent',
-          lastActiveAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          user: { id: 'user-id', phone: '1234567890', tenantId: 'tenant-456' }
-        });
-      }
-      return Promise.resolve(null);
-    }),
-    // ADD THE MISSING findMany METHOD that DeviceFingerprintingService needs
-    findMany: jest.fn().mockResolvedValue([]), // This fixes the DeviceFingerprintingService initialization error
-  },
-  userRole: {
-    findMany: jest.fn((args: any) => {
-      // Your existing mock
-      return Promise.resolve([]);
-    }),
-  },
-  tenant: {
-    findMany: jest.fn(),
-    findUnique: jest.fn(() => Promise.resolve({
-      id: 'system-tenant',
-      slug: 'system-tenant',
-      name: 'System Tenant',
-      status: 'ACTIVE',
-      branding: {},
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })),
-    count: jest.fn(() => Promise.resolve(10)),
-    create: jest.fn((args: any) => {
-      return Promise.resolve({
-        id: 'new-tenant-id-' + Date.now(),
-        name: args.data.name,
-        slug: args.data.slug,
-        status: args.data.status || 'ACTIVE',
-        branding: args.data.branding || {},
+//   beforeAll(async () => {
+//     const moduleFixture: TestingModule = await Test.createTestingModule({
+//       imports: [TestAppModule], // Ensure AppModule provides JwtStrategy and PassportModule
+//     })
+//     .overrideProvider(PrismaService)
+//     .useValue({
+//   session: {
+//     findUnique: jest.fn((args: any) => {
+//       // Your existing session mock logic
+//       const requestedId = args.where?.id;
+//       if (requestedId === 'session-id-super') {
+//         return Promise.resolve({
+//           id: 'session-id-super',
+//           csrfToken: 'valid-csrf-token',
+//           userId: 'super-admin-id',
+//           tenantId: 'system-tenant',
+//           revoked: false,
+//           expiresAt: new Date(Date.now() + 100000),
+//           ipAddress: '127.0.0.1',
+//           userAgent: 'test-agent',
+//           lastActiveAt: new Date(),
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
+//           user: { id: 'super-admin-id', phone: '1234567890', tenantId: 'system-tenant' }
+//         });
+//       } else if (requestedId === 'session-id') {
+//         return Promise.resolve({
+//           id: 'session-id',
+//           csrfToken: 'valid-csrf-token',
+//           userId: 'admin-id',
+//           tenantId: 'tenant-123',
+//           revoked: false,
+//           expiresAt: new Date(Date.now() + 100000),
+//           ipAddress: '127.0.0.1',
+//           userAgent: 'test-agent',
+//           lastActiveAt: new Date(),
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
+//           user: { id: 'admin-id', phone: '1234567890', tenantId: 'tenant-123' }
+//         });
+//       } else if (requestedId === 'session-id-user') {
+//         return Promise.resolve({
+//           id: 'session-id-user',
+//           csrfToken: 'valid-csrf-token',
+//           userId: 'user-id',
+//           tenantId: 'tenant-456',
+//           revoked: false,
+//           expiresAt: new Date(Date.now() + 100000),
+//           ipAddress: '127.0.0.1',
+//           userAgent: 'test-agent',
+//           lastActiveAt: new Date(),
+//           createdAt: new Date(),
+//           updatedAt: new Date(),
+//           user: { id: 'user-id', phone: '1234567890', tenantId: 'tenant-456' }
+//         });
+//       }
+//       return Promise.resolve(null);
+//     }),
+//     // ADD THE MISSING findMany METHOD that DeviceFingerprintingService needs
+//     findMany: jest.fn().mockResolvedValue([]), // This fixes the DeviceFingerprintingService initialization error
+//   },
+//   userRole: {
+//     findMany: jest.fn((args: any) => {
+//       // Your existing mock
+//       return Promise.resolve([]);
+//     }),
+//   },
+//   tenant: {
+//     findMany: jest.fn(),
+//     findUnique: jest.fn(() => Promise.resolve({
+//       id: 'system-tenant',
+//       slug: 'system-tenant',
+//       name: 'System Tenant',
+//       status: 'ACTIVE',
+//       branding: {},
+//       createdAt: new Date(),
+//       updatedAt: new Date()
+//     })),
+//     count: jest.fn(() => Promise.resolve(10)),
+//     create: jest.fn((args: any) => {
+//       return Promise.resolve({
+//         id: 'new-tenant-id-' + Date.now(),
+//         name: args.data.name,
+//         slug: args.data.slug,
+//         status: args.data.status || 'ACTIVE',
+//         branding: args.data.branding || {},
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//       });
+//     }),
+//     update: jest.fn(),
+//     delete: jest.fn(),
+//   },
+//   user: {
+//     findUnique: jest.fn(),
+//     findMany: jest.fn(),  // Add this
+//     count: jest.fn(),    // Add this
+//     create: jest.fn(),
+//     update: jest.fn(),
+//     delete: jest.fn(),
+//     findFirst: jest.fn(),
+//   },
+//   tenantRateLimitProfile: {
+//     findFirst: jest.fn().mockResolvedValue(null),
+//     findMany: jest.fn().mockResolvedValue([]),
+//     create: jest.fn(),
+//     update: jest.fn(),
+//     delete: jest.fn(),
+//   },
+//   // ADD THE MISSING event model
+//   event: {
+//     findMany: jest.fn().mockResolvedValue([]),
+//     findUnique: jest.fn(),
+//     findFirst: jest.fn(),
+//     create: jest.fn(),
+//     update: jest.fn(),
+//     delete: jest.fn(),
+//     count: jest.fn(),
+//   },
+//   // ADD THE MISSING iPBlock model - fixes the runtime error
+//   iPBlock: {
+//     findFirst: jest.fn().mockResolvedValue(null), // Return null if IP not blocked
+//     findMany: jest.fn().mockResolvedValue([]),
+//     create: jest.fn(),
+//     update: jest.fn(),
+//     delete: jest.fn(),
+//     upsert: jest.fn(),
+//   },
+//   // Add other required methods
+//   $connect: jest.fn(),
+//   $disconnect: jest.fn(),
+
+//   role: {
+//     findMany: jest.fn(),
+//   }
+// })
+//     .overrideProvider(EventLogService) // Mock EventLogService
+//     .useValue({
+//       logEvent: jest.fn(),
+//       queryEvents: jest.fn(), // Might be needed if getAuditEvents is called
+//       event$: {
+//         subscribe: jest.fn(), // Mock the subscribe method
+//       },
+//     })
+//     // JwtStrategy is NOT overridden, so the real one is used and registers the 'jwt' strategy
+//     .compile();
+
+//     app = moduleFixture.createNestApplication();
+//     // Apply the mockCookieParser middleware before NestJS routes/guards are executed
+//     // This ensures req.cookies is populated before CsrfGuard runs
+//     app.use(mockCookieParser);
+
+//     prisma = moduleFixture.get<PrismaService>(PrismaService);
+//     eventLogService = moduleFixture.get<EventLogService>(EventLogService);
+//     await app.init();
+//   });
+
+beforeAll(async () => {
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [TestAppModule], // Ensure AppModule provides JwtStrategy and PassportModule
+  })
+  .overrideProvider(PrismaService)
+  .useValue({
+    session: {
+      findUnique: jest.fn((args: any) => {
+        // Your existing session mock logic
+        const requestedId = args.where?.id;
+        if (requestedId === 'session-id-super') {
+          return Promise.resolve({
+            id: 'session-id-super',
+            csrfToken: 'valid-csrf-token',
+            userId: 'super-admin-id',
+            tenantId: 'system-tenant',
+            revoked: false,
+            expiresAt: new Date(Date.now() + 100000),
+            ipAddress: '127.0.0.1',
+            userAgent: 'test-agent',
+            lastActiveAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            user: { id: 'super-admin-id', phone: '1234567890', tenantId: 'system-tenant' }
+          });
+        } else if (requestedId === 'session-id') {
+          return Promise.resolve({
+            id: 'session-id',
+            csrfToken: 'valid-csrf-token',
+            userId: 'admin-id',
+            tenantId: 'tenant-123',
+            revoked: false,
+            expiresAt: new Date(Date.now() + 100000),
+            ipAddress: '127.0.0.1',
+            userAgent: 'test-agent',
+            lastActiveAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            user: { id: 'admin-id', phone: '1234567890', tenantId: 'tenant-123' }
+          });
+        } else if (requestedId === 'session-id-user') {
+          return Promise.resolve({
+            id: 'session-id-user',
+            csrfToken: 'valid-csrf-token',
+            userId: 'user-id',
+            tenantId: 'tenant-456',
+            revoked: false,
+            expiresAt: new Date(Date.now() + 100000),
+            ipAddress: '127.0.0.1',
+            userAgent: 'test-agent',
+            lastActiveAt: new Date(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            user: { id: 'user-id', phone: '1234567890', tenantId: 'tenant-456' }
+          });
+        }
+        return Promise.resolve(null);
+      }),
+      // ADD THE MISSING findMany METHOD that DeviceFingerprintingService needs
+      findMany: jest.fn().mockResolvedValue([]), // This fixes the DeviceFingerprintingService initialization error
+    },
+    userRole: {
+      findMany: jest.fn((args: any) => {
+        // Your existing mock
+        return Promise.resolve([]);
+      }),
+    },
+    tenant: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(() => Promise.resolve({
+        id: 'system-tenant',
+        slug: 'system-tenant',
+        name: 'System Tenant',
+        status: 'ACTIVE',
+        branding: {},
         createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    }),
-    update: jest.fn(),
-    delete: jest.fn(),
-  },
-  user: {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),  // Add this
-    count: jest.fn(),    // Add this
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    findFirst: jest.fn(),
-  },
-  tenantRateLimitProfile: {
-    findFirst: jest.fn().mockResolvedValue(null),
-    findMany: jest.fn().mockResolvedValue([]),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  },
-  // ADD THE MISSING event model
-  event: {
-    findMany: jest.fn().mockResolvedValue([]),
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    count: jest.fn(),
-  },
-  // ADD THE MISSING iPBlock model - fixes the runtime error
-  iPBlock: {
-    findFirst: jest.fn().mockResolvedValue(null), // Return null if IP not blocked
-    findMany: jest.fn().mockResolvedValue([]),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    upsert: jest.fn(),
-  },
-  // Add other required methods
-  $connect: jest.fn(),
-  $disconnect: jest.fn(),
+        updatedAt: new Date()
+      })),
+      count: jest.fn(() => Promise.resolve(10)),
+      create: jest.fn((args: any) => {
+        return Promise.resolve({
+          id: 'new-tenant-id-' + Date.now(),
+          name: args.data.name,
+          slug: args.data.slug,
+          status: args.data.status || 'ACTIVE',
+          branding: args.data.branding || {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),  // Add this
+      count: jest.fn(),    // Add this
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      findFirst: jest.fn(),
+    },
+    tenantRateLimitProfile: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    // ADD THE MISSING event model
+    event: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    // ADD THE MISSING iPBlock model - fixes the runtime error
+    iPBlock: {
+      findFirst: jest.fn().mockResolvedValue(null), // Return null if IP not blocked
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    // Add other required methods
+    $connect: jest.fn(),
+    $disconnect: jest.fn(),
 
-  role: {
-    findMany: jest.fn(),
-  }
-})
-    .overrideProvider(EventLogService) // Mock EventLogService
-    .useValue({
-      logEvent: jest.fn(),
-      queryEvents: jest.fn(), // Might be needed if getAuditEvents is called
-      event$: {
-        subscribe: jest.fn(), // Mock the subscribe method
-      },
-    })
-    // JwtStrategy is NOT overridden, so the real one is used and registers the 'jwt' strategy
-    .compile();
+    role: {
+      findMany: jest.fn(),
+    }
+  })
+  .overrideProvider(EventLogService) // Mock EventLogService
+  .useValue({
+    logEvent: jest.fn(),
+    queryEvents: jest.fn(), // Might be needed if getAuditEvents is called
+    event$: {
+      subscribe: jest.fn(() => ({
+        unsubscribe: jest.fn(),
+      })),
+    },
+  })
+  // ADD MOCKS FOR ALL THE SERVICES FROM YOUR MODULES
+  .overrideProvider(IPReputationService)
+  .useValue({
+    checkIP: jest.fn().mockResolvedValue({ isBlocked: false, confidence: 0.1 }),
+    isIPBlocked: jest.fn().mockResolvedValue(false),
+    // Add other methods as needed
+  })
+  .overrideProvider(DeviceFingerprintingService)
+  .useValue({
+    analyzeFingerprint: jest.fn().mockResolvedValue({ isBot: false, confidence: 0.1 }),
+    generateFingerprint: jest.fn().mockResolvedValue('mock-fingerprint'),
+    // Add other methods as needed
+  })
+  .overrideProvider(BotDetectionService)
+  .useValue({
+    detectBot: jest.fn().mockResolvedValue({ isBot: false, confidence: 0.1 }),
+    // Add other methods as needed
+  })
+  .overrideProvider(BehavioralAnalysisService)
+  .useValue({
+    analyzeBehavior: jest.fn().mockResolvedValue({ isSuspicious: false, riskScore: 0.1 }),
+    // Add other methods as needed
+  })
+  .overrideProvider(SecurityMonitoringService)
+  .useValue({
+    logSecurityEvent: jest.fn(),
+    checkSecurityStatus: jest.fn().mockResolvedValue({ isSecure: true }),
+    // Add other methods as needed
+  })
+  .overrideProvider(RateLimitingService) // This is the critical one!
+  .useValue({
+    isRequestAllowed: jest.fn().mockResolvedValue({ allowed: true, resetTime: Date.now() + 1000 }),
+    checkRateLimit: jest.fn().mockResolvedValue({ allowed: true, resetTime: Date.now() + 1000 }),
+    consumeRateLimit: jest.fn().mockResolvedValue({ allowed: true, resetTime: Date.now() + 1000 }),
+    // Add other methods as needed
+  })
+  .compile();
 
-    app = moduleFixture.createNestApplication();
-    // Apply the mockCookieParser middleware before NestJS routes/guards are executed
-    // This ensures req.cookies is populated before CsrfGuard runs
-    app.use(mockCookieParser);
+  app = moduleFixture.createNestApplication();
+  // Apply the mockCookieParser middleware before NestJS routes/guards are executed
+  // This ensures req.cookies is populated before CsrfGuard runs
+  app.use(mockCookieParser);
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-    eventLogService = moduleFixture.get<EventLogService>(EventLogService);
-    await app.init();
-  });
+  prisma = moduleFixture.get<PrismaService>(PrismaService);
+  eventLogService = moduleFixture.get<EventLogService>(EventLogService);
+  await app.init();
+});
 
   afterAll(async () => {
     await app.close();
