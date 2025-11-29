@@ -47,27 +47,30 @@ describe('Auth Lifecycle (E2E)', () => {
   it('should complete OTP -> verify -> logout flow correctly', async () => {
     const phone = `+1555123456${Date.now()}`;
     const tenantSlug = 'default';
-
+  
+    // Create a request instance to maintain cookies across requests
+    const agent = request.agent(app.getHttpServer());
+  
     // 1. Request OTP
-    const requestRes = await request(app.getHttpServer())
+    const requestRes = await agent
       .post('/v1/auth/request-otp')
       .send({ phone, tenantSlug })
       .set('x-forwarded-for', '127.0.0.1')
       .set('user-agent', 'jest-e2e-test')
       .expect(201);
-
+  
     // 2. Get OTP from dev store
     const devOtp = DevOtpStore.get(phone);
     expect(devOtp).toBeDefined();
-
-    // 3. Verify OTP
-    const verifyRes = await request(app.getHttpServer())
+  
+    // 3. Verify OTP - cookies will be automatically maintained by agent
+    const verifyRes = await agent
       .post('/v1/auth/otpVerify')
       .send({ phone, code: devOtp, tenantSlug })
       .set('x-forwarded-for', '127.0.0.1')
       .set('user-agent', 'jest-e2e-test')
       .expect(201);
-
+  
     // Validate session was created correctly
     const sessionInDb = await prisma.session.findFirst({
       where: { userId: verifyRes.body.user.id },
@@ -75,23 +78,16 @@ describe('Auth Lifecycle (E2E)', () => {
     });
     expect(sessionInDb).toBeTruthy();
     expect(sessionInDb!.csrfToken).toBe(verifyRes.body.csrfToken);
-
-    // 4. Extract cookies for logout
-    const cookies = verifyRes.headers['set-cookie'];
-    const cookieHeader = (Array.isArray(cookies) ? cookies : [cookies])
-      .map(c => c.split(';')[0])
-      .join('; ');
-
-    // 5. Logout with all required context
-    const logoutRes = await request(app.getHttpServer())
+  
+    // 4. Logout - cookies are automatically maintained by agent
+    const logoutRes = await agent
       .post('/v1/auth/logout')
-      .set('Cookie', cookieHeader)           // 👈 Critical: send cookies manually
-      .set('x-tenant-slug', tenantSlug)      // 👈 Required by TenantGuard
-      .set('x-csrf-token', verifyRes.body.csrfToken) // 👈 Required by CsrfGuard
+      .set('x-tenant-slug', tenantSlug)      
+      .set('x-csrf-token', verifyRes.body.csrfToken) 
       .set('x-forwarded-for', '127.0.0.1')
       .set('user-agent', 'jest-e2e-test')
       .expect(201);
-
+  
     expect(logoutRes.body).toEqual({ ok: true });
   });
 
