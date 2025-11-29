@@ -112,7 +112,7 @@ model Tenant {
 
   Permission Permission[]
 
-  rateLimitProfile TenantRateLimitProfile?
+  rateLimitProfile TenantRateLimitProfile[]
 }
 
 model User {
@@ -440,7 +440,7 @@ model TenantPolicy {
 
 model TenantRateLimitProfile {
   id         String              @id @default(cuid())
-  tenantId   String              @unique
+  tenantId   String              
   tenant     Tenant              @relation(fields: [tenantId], references: [id])
   name       String              // e.g., 'standard', 'premium', 'enterprise'
   limits     Json                // JSON object containing rate limit configs
@@ -455,6 +455,7 @@ model TenantRateLimitProfile {
   @@index([tenantId])
   @@index([isActive])
   @@index([isDefault])
+  @@unique([tenantId, name]) 
 }
 
 // For tracking permission usage and auditing

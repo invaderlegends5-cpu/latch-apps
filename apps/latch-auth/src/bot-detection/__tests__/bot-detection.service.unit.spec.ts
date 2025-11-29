@@ -12,38 +12,37 @@ import { SecurityMonitoringService } from '@/security/security-monitor.service';
 
 describe('BotDetectionService', () => {
   let service: BotDetectionService;
+  let mockRedisService: Partial<RedisService>;
+  let mockPrismaService: Partial<PrismaService>;
 
   beforeEach(async () => {
+
+    mockRedisService = {
+      // Provide all methods BotDetectionService and its sub-dependencies use
+      get: jest.fn().mockResolvedValue(null), 
+      setex: jest.fn().mockResolvedValue('OK'),
+      // Add other methods (lrange, lpush, incr, etc.) that are used within the service logic
+    };
+    
+    mockPrismaService = {
+        // Mock any methods BotDetectionService or its dependencies call
+        iPBlock: { findFirst: jest.fn().mockResolvedValue(null) },
+        iPWhitelist: { findFirst: jest.fn().mockResolvedValue(null) },
+        event: { create: jest.fn() },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        BotDetectionService,
-        PrismaService,
-        EventLogService,
-        {
-          provide: SecurityMonitoringService, // ADD THIS - needed by BehavioralAnalysisService
-          useValue: {
-            handleEvent: jest.fn(),
-            // Add other methods that BehavioralAnalysisService might call
-          },
-        },
-        BehavioralAnalysisService,
-        { provide: RedisService, useValue: {} },
-        IPReputationService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn().mockImplementation((key: string) => {
-              // You can implement specific returns for specific keys if needed
-              // or just return a default value for all keys during testing
-              if (key === 'EVENT_SIGNING_SECRET') {
-                return 'test-signing-secret';
-              }
-              return null; // Default return for other keys
-            }),
-          },
-        },
-
-        DeviceFingerprintingService,
+        BotDetectionService, // The service under test
+        { provide: PrismaService, useValue: mockPrismaService }, // Use the mock
+        { provide: EventLogService, useValue: { logEvent: jest.fn() } }, // Use a mock
+        // BehavioralAnalysisService relies on other services, so it's safer to mock it too for a unit test:
+        { provide: BehavioralAnalysisService, useValue: { handleEvent: jest.fn(), analyze: jest.fn().mockResolvedValue({}) } },
+        { provide: RedisService, useValue: mockRedisService }, // Use the mock with methods
+        { provide: IPReputationService, useValue: { isIPBlocked: jest.fn().mockResolvedValue(false) } }, // Use a mock
+        { provide: DeviceFingerprintingService, useValue: { /* mock required methods */ } }, // Use a mock
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-secret') } },
+        { provide: SecurityMonitoringService, useValue: { handleEvent: jest.fn() } }, // Use a mock
       ],
     }).compile();
 
