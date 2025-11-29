@@ -1,3 +1,4 @@
+// src/redis/redis.module.ts
 import { Module, Global } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { RedisService } from './redis.service';
@@ -8,12 +9,14 @@ import { RedisService } from './redis.service';
     {
       provide: 'REDIS',
       useFactory: () => {
-        const redis = new Redis({
-  host: process.env.REDIS_HOST ?? 'localhost',
-  port: parseInt(process.env.REDIS_PORT!, 10) || 6379,
-  maxRetriesPerRequest: 3,
-  lazyConnect: true, // Don't connect immediately
-  
+        // Use the full URL provided by the environment variable
+        const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+        
+        // Pass the entire connection string to the Redis constructor
+        const redis = new Redis(redisUrl, {
+          maxRetriesPerRequest: 3,
+          lazyConnect: true, // Don't connect immediately
+          // You don't need host/port options if the URL is provided
         });
 
         // Handle connection events
