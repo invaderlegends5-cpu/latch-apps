@@ -80,6 +80,12 @@ jobs:
           
           echo "✅ /v1/health verified successfully."
 
+      - name: Debug Staging Container Logs
+        if: always() # Run this even if the previous step failed
+        run: |
+          echo "Dumping logs for debugging:"
+          docker logs latch_auth_staging
+
       # - name: Verify /v1/health Endpoint
       #   run: |
       #     timeout 30s curl -f http://localhost:3000/v1/health || (echo "❌ Health verification failed!" && exit 1)
