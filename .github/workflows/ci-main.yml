@@ -372,12 +372,13 @@ jobs:
         id: generate_e2e_db_name 
         run: echo "::set-output name=db_name::e2e_db_$(date +%s)"
 
-      - name: Create E2E Database
+      - name: Create E2E Database using psql
         run: |
           DB_NAME=${{ steps.generate_e2e_db_name.outputs.db_name }}
-          # Use the main DATABASE_URL (which connects to the 'latch_auth' db as admin)
-          # to execute the CREATE DATABASE command for the unique E2E DB.
-          bunx prisma db execute --url ${{ env.DATABASE_URL }} --file <(echo "CREATE DATABASE $DB_NAME;")
+          # Use psql to create the database connecting as the 'latch' user to 'latch_auth' db
+          # PGPASSWORD is required for psql in non-interactive environments
+          export PGPASSWORD=latch123
+          psql -h localhost -p 5432 -U latch -d latch_auth -c "CREATE DATABASE $DB_NAME;"
 
       - name: Apply Prisma Migrations to E2E DB
         working-directory: apps/latch-auth
