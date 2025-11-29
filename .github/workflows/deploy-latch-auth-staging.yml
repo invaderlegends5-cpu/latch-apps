@@ -45,6 +45,28 @@ jobs:
       - name: Checkout latch-apps repo
         uses: actions/checkout@v4
         
+      - name: Setup Bun Runtime # Need Bun to run Prisma commands
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies # Need node_modules for prisma
+        working-directory: apps/latch-auth
+        run: bun install --frozen-lockfile
+
+      - name: Wait for DB Ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..20}; do
+            nc -z localhost 5432 && echo "Postgres is up!" && break
+            sleep 2
+          done
+          if [ $i -eq 20 ]; then exit 1; fi
+
+      - name: Apply Prisma Migrations
+        working-directory: apps/latch-auth
+        run: bunx prisma migrate deploy
+
       - name: Build Docker Image
         working-directory: apps/latch-auth
         run: docker build -t latch-auth:staging .
