@@ -49,7 +49,7 @@ jobs:
         working-directory: apps/latch-auth
         run: docker build -t latch-auth:staging .
 
-      - name: Run Latch Auth (Background)
+      - name: Run Latch Auth (Background) and Verify Health
         working-directory: apps/latch-auth
         run: |
           docker run -d --name latch_auth_staging \
@@ -60,18 +60,30 @@ jobs:
             -p 3000:3000 latch-auth:staging
 
           echo "Waiting for service to start..."
+          
+          # Use a single variable for health check status
+          HEALTH_CHECK_SUCCESS=false
+
           for i in {1..25}; do
-            if curl -fs http://localhost:3000/v1/health >/dev/null 2>&1; then
+            if curl -f http://localhost:3000/v1/health >/dev/null 2>&1; then
               echo "✅ Latch Auth container is healthy!"
+              HEALTH_CHECK_SUCCESS=true
               break
             fi
             sleep 3
           done
-
-      - name: Verify /v1/health Endpoint
-        run: |
-          timeout 30s curl -f http://localhost:3000/v1/health || (echo "❌ Health verification failed!" && exit 1)
+          
+          if [ "$HEALTH_CHECK_SUCCESS" = "false" ]; then
+            echo "❌ Health verification failed after waiting!"
+            exit 1 # Fail the step if not healthy
+          fi
+          
           echo "✅ /v1/health verified successfully."
+
+      # - name: Verify /v1/health Endpoint
+      #   run: |
+      #     timeout 30s curl -f http://localhost:3000/v1/health || (echo "❌ Health verification failed!" && exit 1)
+      #     echo "✅ /v1/health verified successfully."
 
       - name: Cleanup Containers
         if: always()
