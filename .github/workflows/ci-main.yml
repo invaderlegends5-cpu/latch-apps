@@ -333,12 +333,12 @@ jobs:
           done
           echo "Database 'postgres' is ready and accepting connections."
 
-      - name: Apply Prisma Migrations
-        working-directory: apps/latch-auth
-        env:
-          # This should use 'postgres' if that's where your services run
-          DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth 
-        run: npx prisma migrate deploy
+      # - name: Apply Prisma Migrations
+      #   working-directory: apps/latch-auth
+      #   env:
+      #     # This should use 'postgres' if that's where your services run
+      #     DATABASE_URL: postgresql://latch:latch123@postgres:5432/latch_auth 
+      #   run: npx prisma migrate deploy
 
       - name: Generate Prisma Client
         working-directory: apps/latch-auth
