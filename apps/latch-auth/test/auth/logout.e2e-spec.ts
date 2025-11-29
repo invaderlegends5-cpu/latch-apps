@@ -18,6 +18,11 @@ describe('Auth Lifecycle (E2E)', () => {
 
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('v1');
+
+    app.enableCors(); // (Optional, if you use CORS)
+    const expressApp = app.getHttpAdapter().getInstance();
+    expressApp.set('trust proxy', true);
+
     app.use(cookieParser(process.env.COOKIE_SECRET ?? 'dev_cookie_secret'));
     await app.init();
 

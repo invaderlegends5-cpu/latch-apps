@@ -387,6 +387,12 @@ jobs:
           DATABASE_URL: postgresql://latch:latch123@localhost:5432/${{ steps.generate_e2e_db_name.outputs.db_name }}
         run: bunx prisma migrate deploy  
 
+      - name: Run Prisma Seed (Mock) for E2E DB
+        working-directory: apps/latch-auth
+        env:
+          DATABASE_URL: postgresql://latch:latch123@localhost:5432/${{ steps.generate_e2e_db_name.outputs.db_name }}
+        run: bun run prisma:seed
+
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
         # Update the reference here to use 'generate_e2e_db_name'
