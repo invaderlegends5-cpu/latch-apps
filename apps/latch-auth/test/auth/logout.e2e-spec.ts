@@ -6,6 +6,7 @@ import { AppModule } from '../../src/app.module';
 import { DevOtpStore } from '../../src/utils/dev-otp-store';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import cookieParser from 'cookie-parser';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
 
 describe('Auth Lifecycle (E2E)', () => {
   let app: INestApplication;
@@ -14,6 +15,16 @@ describe('Auth Lifecycle (E2E)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
+    })
+    .overrideProvider(IPReputationService)
+    .useValue({
+        // Mock the isIPBlocked method to return false and prevent validation errors
+        isIPBlocked: jest.fn().mockResolvedValue(false),
+        // Mock any other methods the tests trigger
+        calculateReputation: jest.fn().mockResolvedValue({ score: 0, isBot: false, recommendation: 'ALLOW' }),
+        updateReputation: jest.fn().mockResolvedValue(undefined),
+        // Add isValidIP if it's public and called directly by other services
+        isValidIP: jest.fn().mockReturnValue(true), 
     }).compile();
 
     app = moduleRef.createNestApplication();
