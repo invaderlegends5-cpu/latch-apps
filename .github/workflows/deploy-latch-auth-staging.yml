@@ -12,7 +12,7 @@ on:
     branches: [ "dev" ]
 
 env:
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latch_auth
   REDIS_URL: redis://redis:6379
   EVENT_SIGNING_SECRET: staging-signing-secret
   NODE_ENV: production
@@ -28,10 +28,10 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: latchdb
+          POSTGRES_DB: latch_auth
         ports: ["5432:5432"]
         options: >-
-          --health-cmd="pg_isready -U postgres -d latchdb"
+          --health-cmd="pg_isready -U postgres -d latch_auth"
           --health-interval=10s --health-timeout=5s --health-retries=5
 
       redis:
