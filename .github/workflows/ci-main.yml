@@ -356,14 +356,32 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           bun prisma/seed-check.ts
-
+      
+      - name: Setup E2E Database Name
+        id: db_name_gen
+        run: echo "::set-output name=db_name::e2e_db_$(date +%s)"
+      
                 
+      # - name: Run E2E Tests with Coverage
+      #   working-directory: apps/latch-auth
+      #   run: |
+      #     mkdir -p apps/latch-auth/latch-auth-ci-artifacts
+      #     timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
+      
+      - name: Setup E2E Database Name
+        id: generate_e2e_db_name 
+        run: echo "::set-output name=db_name::e2e_db_$(date +%s)"
+
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
+        # Update the reference here to use 'generate_e2e_db_name'
+        env:
+          DATABASE_URL: postgresql://latch:latch123@localhost:5432/${{ steps.generate_e2e_db_name.outputs.db_name }}
+          # ... other env variables ...
         run: |
-          mkdir -p apps/latch-auth/latch-auth-ci-artifacts
-          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1
-      
+          mkdir -p latch-auth-ci-artifacts
+          timeout 300s bun test:e2e --ci --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage || exit 1  
+
       - name: Debug- Check coverage output
         working-directory: apps/latch-auth
         run: |
