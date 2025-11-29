@@ -13,7 +13,7 @@ on:
 
 env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/latchdb
-  REDIS_URL: redis://localhost:6379
+  REDIS_URL: redis://redis:6379
   EVENT_SIGNING_SECRET: staging-signing-secret
   NODE_ENV: production
 
