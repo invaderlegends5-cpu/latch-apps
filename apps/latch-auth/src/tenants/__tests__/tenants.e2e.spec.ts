@@ -102,22 +102,23 @@ describe('TenantsController (e2e)', () => {
           updatedAt: new Date()
         })),
         count: jest.fn(() => Promise.resolve(10)),
-    // ADD THE MISSING create METHOD
-    create: jest.fn((args: any) => {
-      // Mock tenant creation - return the tenant data with an ID
-      return Promise.resolve({
-        id: 'new-tenant-id-' + Date.now(), // Generate a unique ID
-        name: args.data.name,
-        slug: args.data.slug,
-        status: args.data.status || 'ACTIVE',
-        branding: args.data.branding || {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    }),
-    update: jest.fn(),
-    delete: jest.fn(),
-      },
+        update: jest.fn(),
+        delete: jest.fn(),
+        
+        // This MUST be syntactically correct:
+        create: jest.fn((args: any) => {
+          return Promise.resolve({
+            id: 'new-tenant-id-' + Date.now(),
+            name: args.data.name,
+            slug: args.data.slug,
+            status: args.data.status || 'ACTIVE',
+            branding: args.data.branding || {},
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }),
+            },
+
       tenantRateLimitProfile: {
         findFirst: jest.fn().mockResolvedValue(null),
         findMany: jest.fn().mockResolvedValue([]),
@@ -152,6 +153,14 @@ describe('TenantsController (e2e)', () => {
       role: {
         findMany: jest.fn(),
       }
+    })
+    .overrideProvider('REDIS')
+    .useValue({
+      get: jest.fn().mockResolvedValue(null), // Provide default mock responses
+      setex: jest.fn(),
+      // Add all other required methods that guards/services use
+      quit: jest.fn().mockResolvedValue('OK'), // Must include quit() for the hook
+      disconnect: jest.fn(),
     })
     .compile();
 

@@ -24,6 +24,34 @@ describe('RateLimitingService - Cache Management', () => {
               findMany: jest.fn(),
               create: jest.fn(),
             },
+            tenant: {
+              findMany: jest.fn(),
+              findUnique: jest.fn(() => Promise.resolve({
+                id: 'system-tenant',
+                slug: 'system-tenant',
+                name: 'System Tenant',
+                status: 'ACTIVE',
+                branding: {},
+                createdAt: new Date(),
+                updatedAt: new Date()
+              })),
+              count: jest.fn(() => Promise.resolve(10)),
+              update: jest.fn(),
+              delete: jest.fn(),
+              
+              // This 'create' mock definition is necessary to fix the TypeError:
+              create: jest.fn((args: any) => {
+                return Promise.resolve({
+                  id: 'new-tenant-id-' + Date.now(), 
+                  name: args.data.name,
+                  slug: args.data.slug,
+                  status: args.data.status || 'ACTIVE',
+                  branding: args.data.branding || {},
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                });
+              }),
+            },
           },
         },
         {

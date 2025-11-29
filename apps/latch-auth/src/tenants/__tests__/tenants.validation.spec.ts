@@ -124,9 +124,32 @@ describe('TenantsController & TenantsService Validation Tests - Unit', () => {
   // Define mock objects that match the working test pattern
   const mockPrismaService: any = {
     tenant: {
-      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(() => Promise.resolve({
+        id: 'system-tenant',
+        slug: 'system-tenant',
+        name: 'System Tenant',
+        status: 'ACTIVE',
+        branding: {},
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })),
+      count: jest.fn(() => Promise.resolve(10)),
       update: jest.fn(),
-      count: jest.fn(),
+      delete: jest.fn(),
+      
+      // This 'create' mock definition is necessary to fix the TypeError:
+      create: jest.fn((args: any) => {
+        return Promise.resolve({
+          id: 'new-tenant-id-' + Date.now(), 
+          name: args.data.name,
+          slug: args.data.slug,
+          status: args.data.status || 'ACTIVE',
+          branding: args.data.branding || {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }),
     },
     role: {
       create: jest.fn(),
@@ -653,11 +676,34 @@ describe('TenantsController DTO ValidationPipe (E2E Style)', () => {
 
     // Define necessary mocks *for this block only*, potentially reusing structures
     const mockPrismaServiceForE2E: any = {
-        tenant: {
-            findUnique: jest.fn(), // Initially clear, will be configured in beforeEach
-            update: jest.fn(),
-            count: jest.fn(),
-        },
+      tenant: {
+        findMany: jest.fn(),
+        findUnique: jest.fn(() => Promise.resolve({
+          id: 'system-tenant',
+          slug: 'system-tenant',
+          name: 'System Tenant',
+          status: 'ACTIVE',
+          branding: {},
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })),
+        count: jest.fn(() => Promise.resolve(10)),
+        update: jest.fn(),
+        delete: jest.fn(),
+        
+        // This 'create' mock definition is necessary to fix the TypeError:
+        create: jest.fn((args: any) => {
+          return Promise.resolve({
+            id: 'new-tenant-id-' + Date.now(), 
+            name: args.data.name,
+            slug: args.data.slug,
+            status: args.data.status || 'ACTIVE',
+            branding: args.data.branding || {},
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }),
+      },
         role: {
             create: jest.fn(),
             count: jest.fn(),

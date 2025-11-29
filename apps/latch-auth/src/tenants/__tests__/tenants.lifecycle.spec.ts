@@ -138,10 +138,14 @@ describe('TenantsController Lifecycle Integration Tests', () => {
     let redisService: jest.Mocked<Redis>;
     const mockPrisma = mockDeep<PrismaService>();
     const mockEventLog = mockDeep<EventLogService>();
+    // let prisma: PrismaService;
+    let moduleFixture: TestingModule;
     const mockRedis = {
       get: jest.fn(),
       setex: jest.fn(),
       del: jest.fn(),
+      quit: jest.fn().mockResolvedValue('OK'), 
+      disconnect: jest.fn(),
     } as unknown as jest.Mocked<Redis>;
     // Create a DeepMockProxy for the service itself
     const mockTenantsService = mockDeep<TenantsService>();
@@ -189,9 +193,33 @@ describe('TenantsController Lifecycle Integration Tests', () => {
           count: jest.fn(),
         },
         tenant: {
-          findUnique: jest.fn(),
-          // ... other tenant methods if used by analytics
-       },
+          findMany: jest.fn(),
+          findUnique: jest.fn(() => Promise.resolve({
+            id: 'system-tenant',
+            slug: 'system-tenant',
+            name: 'System Tenant',
+            status: 'ACTIVE',
+            branding: {},
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })),
+          count: jest.fn(() => Promise.resolve(10)),
+          update: jest.fn(),
+          delete: jest.fn(),
+          
+          // This 'create' mock definition is necessary to fix the TypeError:
+          create: jest.fn((args: any) => {
+            return Promise.resolve({
+              id: 'new-tenant-id-' + Date.now(), 
+              name: args.data.name,
+              slug: args.data.slug,
+              status: args.data.status || 'ACTIVE',
+              branding: args.data.branding || {},
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }),
+        },
         // ADD THESE MODELS that IPReputationService uses
         iPBlock: {
           findFirst: jest.fn().mockResolvedValue(null),
@@ -385,9 +413,31 @@ describe('TenantsController Lifecycle Integration Tests', () => {
       // Example default (will be overridden by step-specific mocks):
       // (prismaService.tenant.findUnique as jest.Mock).mockResolvedValue(null); // Or a default structure
     });
-  afterAll(async () => {
-    await app.close();
-  });
+    afterAll(async () => {
+      // 1. Shut down the NestJS application instance (stops HTTP server)
+      if (app) {
+        await app.close();
+      }
+      
+      // 2. Explicitly disconnect Prisma client
+      if (prismaService && prismaService.$disconnect) {
+        await prismaService.$disconnect();
+      }
+  
+      // 3. Check for and disconnect the Redis client if it's initialized
+      // (You might need to get the Redis instance from the module context if it's used)
+      // try {
+      //     const redisService = moduleFixture.get<Redis>('IOREDIS_CLIENT'); // Adjust token if needed
+      //     if (redisService && typeof redisService.quit === 'function') {
+      //         await redisService.quit(); // Use .quit() to ensure connection closes
+      //     }
+      // } catch (e) {
+      //     // Handle cases where Redis might not be provided in this specific test
+      // }
+      
+      // If you use 'jest-mock-extended' (as imported), reset all mocks:
+      jest.clearAllMocks();
+    });
   describe('Full Tenant Lifecycle: Create -> Update -> Deactivate -> Activate -> Read', () => {
     it('should successfully execute the full tenant lifecycle via HTTP requests', async () => {
       // --- Step 1: Create Tenant ---

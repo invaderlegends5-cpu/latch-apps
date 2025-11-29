@@ -1,12 +1,20 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject, OnModuleDestroy } from '@nestjs/common';
 import { Redis } from 'ioredis';
 
 @Injectable()
-export class RedisService {
+export class RedisService implements OnModuleDestroy { 
   private readonly logger = new Logger(RedisService.name);
 
   constructor(@Inject('REDIS') private readonly redis: Redis) {
     // Redis instance is already provided by your RedisModule
+  }
+
+  async onModuleDestroy() {
+    console.log('--- DEBUG: onModuleDestroy triggered for RedisService ---');
+    if (this.redis && typeof this.redis.quit === 'function') {
+      this.logger.log('Closing Redis connection...');
+      await this.redis.quit(); // Gracefully closes the connection
+    }
   }
 
   async get(key: string): Promise<string | null> {
@@ -196,7 +204,7 @@ export class RedisService {
     }
   }
 
-  async hincrby(key: string, field: string, increment: number): Promise<number> {
+   async hincrby(key: string, field: string, increment: number): Promise<number> {
     try {
       return await this.redis.hincrby(key, field, increment);
     } catch (error) {

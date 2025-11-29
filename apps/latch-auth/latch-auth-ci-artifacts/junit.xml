@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="7" failures="0" errors="0" time="31.283">
-  <testsuite name="TenantsController (e2e)" errors="0" failures="0" skipped="0" timestamp="2025-11-28T18:42:40" time="30.069" tests="7">
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject non-SUPER_ADMIN users with 401 Unauthorized (due to security mapping)" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject non-SUPER_ADMIN users with 401 Unauthorized (due to security mapping)" time="0.493">
+<testsuites name="jest tests" tests="3" failures="0" errors="0" time="6.655">
+  <testsuite name="BotDetectionService" errors="0" failures="0" skipped="0" timestamp="2025-11-29T05:17:40" time="5.817" tests="3">
+    <testcase classname="BotDetectionService should be defined" name="BotDetectionService should be defined" time="0.052">
     </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should allow SUPER_ADMIN users to create tenants" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should allow SUPER_ADMIN users to create tenants" time="0.236">
+    <testcase classname="BotDetectionService analyzeRequest should detect bot behavior" name="BotDetectionService analyzeRequest should detect bot behavior" time="2.164">
     </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests without valid authentication" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests without valid authentication" time="0.039">
-    </testcase>
-    <testcase classname="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests with invalid CSRF tokens" name="TenantsController (e2e) POST /v1/tenants - Authorization Tests should reject requests with invalid CSRF tokens" time="0.124">
-    </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow SUPER_ADMIN to list all tenants" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow SUPER_ADMIN to list all tenants" time="0.344">
-    </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow ADMIN to list tenants with tenant isolation" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should allow ADMIN to list tenants with tenant isolation" time="0.16">
-    </testcase>
-    <testcase classname="TenantsController (e2e) GET /v1/tenants - Authorization Tests should reject regular users from listing all tenants" name="TenantsController (e2e) GET /v1/tenants - Authorization Tests should reject regular users from listing all tenants" time="0.121">
+    <testcase classname="BotDetectionService analyzeRequest should allow human-like requests" name="BotDetectionService analyzeRequest should allow human-like requests" time="0.354">
     </testcase>
   </testsuite>
 </testsuites>

@@ -197,6 +197,14 @@ describe('Admin Guard Integration Tests', () => {
         subscribe: jest.fn(), // Mock the subscribe method
       },
     })
+    .overrideProvider('REDIS')
+  .useValue({
+    get: jest.fn().mockResolvedValue(null), // Provide default mock responses
+    setex: jest.fn(),
+    // Add all other required methods that guards/services use
+    quit: jest.fn().mockResolvedValue('OK'), // Must include quit() for the hook
+    disconnect: jest.fn(),
+  })
     // JwtStrategy is NOT overridden, so the real one is used and registers the 'jwt' strategy
     .compile();
 

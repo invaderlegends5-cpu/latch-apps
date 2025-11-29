@@ -1,6 +1,7 @@
 {
   "devDependencies": {
-    "@types/node": "^24.9.2"
+    "@types/node": "^24.9.2",
+    "tsc-alias": "^1.8.16"
   },
   "dependencies": {
     "crypto": "^1.0.1",
