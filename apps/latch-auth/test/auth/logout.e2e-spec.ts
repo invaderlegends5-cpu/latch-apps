@@ -46,7 +46,7 @@ describe('Auth Lifecycle (E2E)', () => {
 
   it('should complete OTP -> verify -> logout flow correctly', async () => {
     const phone = `+1555123456${Date.now()}`;
-    const tenantSlug = 'default';
+    const tenantSlug = `test-${Date.now()}`; // Unique tenant slug per test
   
     // Create a request instance to maintain cookies across requests
     const agent = request.agent(app.getHttpServer());
@@ -93,16 +93,18 @@ describe('Auth Lifecycle (E2E)', () => {
 
   it('should handle invalid OTP codes', async () => {
     const phone = `+1555123457${Date.now()}`;
-    const tenantSlug = 'default';
+    const tenantSlug = `test-${Date.now() + 1}`; // Unique tenant slug for this test too
 
-    await request(app.getHttpServer())
+    const agent = request.agent(app.getHttpServer());
+
+    await agent
       .post('/v1/auth/request-otp')
       .send({ phone, tenantSlug })
       .set('x-forwarded-for', '127.0.0.1')
       .set('user-agent', 'jest-e2e-test')
       .expect(201);
 
-    const verifyRes = await request(app.getHttpServer())
+    const verifyRes = await agent
       .post('/v1/auth/otpVerify')
       .send({ phone, code: '000000', tenantSlug })
       .set('x-forwarded-for', '127.0.0.1')
