@@ -79,6 +79,10 @@ describe('Auth Lifecycle (E2E)', () => {
     expect(sessionInDb).toBeTruthy();
     expect(sessionInDb!.csrfToken).toBe(verifyRes.body.csrfToken);
   
+    // Verify that cookies are actually present in the agent
+    console.log('Verify response cookies:', verifyRes.headers['set-cookie']);
+    console.log('Verify response body:', verifyRes.body);
+  
     // 4. Logout - cookies are automatically maintained by agent
     const logoutRes = await agent
       .post('/v1/auth/logout')
