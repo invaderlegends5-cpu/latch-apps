@@ -372,6 +372,20 @@ jobs:
         id: generate_e2e_db_name 
         run: echo "::set-output name=db_name::e2e_db_$(date +%s)"
 
+      - name: Create E2E Database
+        run: |
+          DB_NAME=${{ steps.generate_e2e_db_name.outputs.db_name }}
+          # Use the main DATABASE_URL (which connects to the 'latch_auth' db as admin)
+          # to execute the CREATE DATABASE command for the unique E2E DB.
+          bunx prisma db execute --url ${{ env.DATABASE_URL }} --file <(echo "CREATE DATABASE $DB_NAME;")
+
+      - name: Apply Prisma Migrations to E2E DB
+        working-directory: apps/latch-auth
+        # Temporarily override DATABASE_URL for this step to apply migrations to the *new* DB
+        env:
+          DATABASE_URL: postgresql://latch:latch123@localhost:5432/${{ steps.generate_e2e_db_name.outputs.db_name }}
+        run: bunx prisma migrate deploy  
+
       - name: Run E2E Tests with Coverage
         working-directory: apps/latch-auth
         # Update the reference here to use 'generate_e2e_db_name'
