@@ -176,7 +176,7 @@ jobs:
         mkdir -p latch-auth-ci-artifacts
         bun install --frozen-lockfile
         npx prisma generate
-        bunx jest --ci --runInBand --no-colors --coverage 2>&1 | tee test-output.log
+        bunx jest --ci --runInBand --no-colors --coverage --forceExit 2>&1 | tee test-output.log
                   
     - name: Extract Coverage from Log
       id: coverage
