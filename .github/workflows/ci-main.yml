@@ -226,6 +226,18 @@ jobs:
         fi
         echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
+    - name: Debug - Check artifact directory exists
+      working-directory: apps/latch-auth
+      run: |
+        echo "Checking if directory exists: ${{ env.CI_ARTIFACT_PATH }}"
+        if [ -d "${{ env.CI_ARTIFACT_PATH }}" ]; then
+          echo "✅ Directory ${{ env.CI_ARTIFACT_PATH }} EXISTS"
+          ls -la "${{ env.CI_ARTIFACT_PATH }}"
+        else
+          echo "❌ Directory ${{ env.CI_ARTIFACT_PATH }} does NOT exist"
+          ls -la # List the contents of apps/latch-auth
+        fi    
+
     - name: Upload Unit Test Results
       if: always()
       uses: actions/upload-artifact@v4
@@ -233,7 +245,7 @@ jobs:
         name: latch-auth-unit-results
         path: ${{ env.CI_ARTIFACT_PATH }} # Upload the whole directory: latch-auth-ci-artifacts/
         if-no-files-found: ignore
-        
+
   security-tests:
       name: Security Tests
       runs-on: ubuntu-latest
