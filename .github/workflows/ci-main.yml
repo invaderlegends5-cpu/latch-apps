@@ -176,7 +176,7 @@ jobs:
         mkdir -p latch-auth-ci-artifacts
         bun install --frozen-lockfile
         npx prisma generate
-        bunx jest --ci --runInBand --no-colors --coverage --forceExit 2>&1 | tee test-output.log
+        bunx jest --ci --runInBand --no-colors --coverage --coverageDirectory latch-auth-ci-artifacts/coverage --forceExit 2>&1 | tee test-output.log
             
     - name: Debug - Check JUnit file exists
       working-directory: apps/latch-auth # Ensure we are looking in the right place
