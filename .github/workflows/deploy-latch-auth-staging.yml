@@ -71,22 +71,60 @@ jobs:
         working-directory: apps/latch-auth
         run: docker build -t latch-auth:staging .
 
+      # - name: Run Latch Auth (Background) and Verify Health
+      #   working-directory: apps/latch-auth
+      #   run: |
+      #     docker run -d --name latch_auth_staging \
+      #       --network host \
+      #       -e DATABASE_URL="${{ env.DATABASE_URL }}" \
+      #       -e REDIS_URL="${{ env.REDIS_URL }}" \
+      #       -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
+      #       -p 3000:3000 latch-auth:staging
+
+      #     echo "Waiting for service to start..."
+          
+      #     # Use a single variable for health check status
+      #     HEALTH_CHECK_SUCCESS=false
+
+      #     for i in {1..25}; do
+      #       if curl -f http://localhost:3000/v1/health >/dev/null 2>&1; then
+      #         echo "✅ Latch Auth container is healthy!"
+      #         HEALTH_CHECK_SUCCESS=true
+      #         break
+      #       fi
+      #       sleep 3
+      #     done
+          
+      #     if [ "$HEALTH_CHECK_SUCCESS" = "false" ]; then
+      #       echo "❌ Health verification failed after waiting!"
+      #       exit 1 # Fail the step if not healthy
+      #     fi
+          
+      #     echo "✅ /v1/health verified successfully."
+
+
       - name: Run Latch Auth (Background) and Verify Health
         working-directory: apps/latch-auth
         run: |
           docker run -d --name latch_auth_staging \
-            --network host \
-            -e DATABASE_URL="${{ env.DATABASE_URL }}" \
-            -e REDIS_URL="${{ env.REDIS_URL }}" \
+            --network github-network # Use the GitHub Actions network, implicitly created
+            # No need for -p flag with service network
+            -e DATABASE_URL="postgresql://postgres:postgres@postgres:5432/latch_auth" \ # Use service name 'postgres'
+            -e REDIS_URL="redis://redis:6379" \ # Use service name 'redis'
             -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
-            -p 3000:3000 latch-auth:staging
-
+            -e NODE_ENV="${{ env.NODE_ENV }}" \ # Pass NODE_ENV too, might be important
+            latch-auth:staging
+    
           echo "Waiting for service to start..."
-          
-          # Use a single variable for health check status
+    
+            # Use a single variable for health check status
           HEALTH_CHECK_SUCCESS=false
-
+    
           for i in {1..25}; do
+            # The container should be reachable via its exposed port on the service network
+            # GitHub Actions usually sets up a network where services can communicate
+            # Check if the container's port 3000 is accessible from the runner (this might need adjustment)
+            # Often, the container's port is accessible directly on the runner when using services.
             if curl -f http://localhost:3000/v1/health >/dev/null 2>&1; then
               echo "✅ Latch Auth container is healthy!"
               HEALTH_CHECK_SUCCESS=true
@@ -94,13 +132,15 @@ jobs:
             fi
             sleep 3
           done
-          
+    
           if [ "$HEALTH_CHECK_SUCCESS" = "false" ]; then
             echo "❌ Health verification failed after waiting!"
+            docker logs latch_auth_staging # Log container output to see why it failed
             exit 1 # Fail the step if not healthy
           fi
-          
+    
           echo "✅ /v1/health verified successfully."
+
 
       - name: Debug Staging Container Logs
         if: always() # Run this even if the previous step failed
