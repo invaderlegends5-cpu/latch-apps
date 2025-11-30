@@ -146,11 +146,11 @@ jobs:
           fi
 
           echo "✅ /v1/health verified successfully."
-            - name: Debug Staging Container Logs
-              if: always() 
-              run: |
-                echo "Dumping logs for debugging:"
-                docker logs latch_auth_staging
+      - name: Debug Staging Container Logs
+        if: always() 
+        run: |
+          echo "Dumping logs for debugging:"
+          docker logs latch_auth_staging
 
       # - name: Verify /v1/health Endpoint
       #   run: |
