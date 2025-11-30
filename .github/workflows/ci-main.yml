@@ -268,7 +268,7 @@ jobs:
           working-directory: apps/latch-auth
           run: |
             # Run tests that specifically target security features
-            bunx jest --testPathPatterns="security|bot-detection|ip-reputation|rate-limiting" --ci --no-colors
+            bunx jest --testPathPatterns "security" "bot-detection" "ip-reputation" "rate-limiting" --ci --no-colors
           
   e2e:
     name: E2E + Coverage + Docker Validation
