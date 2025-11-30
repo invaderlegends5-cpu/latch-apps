@@ -8,6 +8,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { RedisService } from '@/redis/redis.service';
+import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
 
 describe('HealthController (e2e)', () => {
   let app: INestApplication;
@@ -16,10 +18,30 @@ describe('HealthController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
+    })
+    .overrideProvider(IPReputationService)
+    .useValue({
+      isIPBlocked: jest.fn().mockResolvedValue(false),
+      calculateReputation: jest.fn().mockResolvedValue({ score: 0, isBot: false, recommendation: 'ALLOW' }),
+      updateReputation: jest.fn().mockResolvedValue(undefined),
+      isValidIP: jest.fn().mockReturnValue(true), 
+    })
+    .overrideProvider(RedisService) // Use the actual class, not a string
+    .useValue({
+      setex: jest.fn().mockResolvedValue('OK'),
+      get: jest.fn().mockResolvedValue(null),
+      del: jest.fn().mockResolvedValue(1),
+      set: jest.fn().mockResolvedValue('OK'),
+      connect: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(), 
+      quit: jest.fn().mockResolvedValue(undefined),
+      // Add any other methods your app calls on the Redis service
     }).compile();
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('v1');
+
+    
     await app.init();
 
     prisma = moduleFixture.get(PrismaService);

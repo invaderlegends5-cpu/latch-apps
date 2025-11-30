@@ -7,6 +7,7 @@ import { DevOtpStore } from '../../src/utils/dev-otp-store';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import cookieParser from 'cookie-parser';
 import { IPReputationService } from '@/ip-reputation/ip-reputation.service';
+import { RedisService } from '@/redis/redis.service';
 
 describe('Auth Lifecycle (E2E)', () => {
   let app: INestApplication;
@@ -18,13 +19,21 @@ describe('Auth Lifecycle (E2E)', () => {
     })
     .overrideProvider(IPReputationService)
     .useValue({
-        // Mock the isIPBlocked method to return false and prevent validation errors
-        isIPBlocked: jest.fn().mockResolvedValue(false),
-        // Mock any other methods the tests trigger
-        calculateReputation: jest.fn().mockResolvedValue({ score: 0, isBot: false, recommendation: 'ALLOW' }),
-        updateReputation: jest.fn().mockResolvedValue(undefined),
-        // Add isValidIP if it's public and called directly by other services
-        isValidIP: jest.fn().mockReturnValue(true), 
+      isIPBlocked: jest.fn().mockResolvedValue(false),
+      calculateReputation: jest.fn().mockResolvedValue({ score: 0, isBot: false, recommendation: 'ALLOW' }),
+      updateReputation: jest.fn().mockResolvedValue(undefined),
+      isValidIP: jest.fn().mockReturnValue(true), 
+    })
+    .overrideProvider(RedisService) // Use the actual class, not a string
+    .useValue({
+      setex: jest.fn().mockResolvedValue('OK'),
+      get: jest.fn().mockResolvedValue(null),
+      del: jest.fn().mockResolvedValue(1),
+      set: jest.fn().mockResolvedValue('OK'),
+      connect: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(), 
+      quit: jest.fn().mockResolvedValue(undefined),
+      // Add any other methods your app calls on the Redis service
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -85,12 +94,13 @@ describe('Auth Lifecycle (E2E)', () => {
   
     // 4. Logout - cookies are automatically maintained by agent
     const logoutRes = await agent
-      .post('/v1/auth/logout')
-      .set('x-tenant-slug', tenantSlug)      
-      .set('x-csrf-token', verifyRes.body.csrfToken) 
-      .set('x-forwarded-for', '127.0.0.1')
-      .set('user-agent', 'jest-e2e-test')
-      .expect(201);
+  .post('/v1/auth/logout')
+  .set('Authorization', `Bearer ${verifyRes.body.accessToken}`) // Include the JWT token
+  .set('x-tenant-slug', tenantSlug)      
+  .set('x-csrf-token', verifyRes.body.csrfToken) 
+  .set('x-forwarded-for', '127.0.0.1')
+  .set('user-agent', 'jest-e2e-test')
+  .expect(201);
   
     expect(logoutRes.body).toEqual({ ok: true });
   });

@@ -127,7 +127,7 @@ export class AuthController {
     }
   }
 
-  @UseGuards(TenantGuard, CsrfGuard) // 🔒 Keep tenant + csrf
+  @UseGuards(JwtAuthGuard, TenantGuard, CsrfGuard) // 🔒 Keep tenant + csrf
   @Post('logout')
   async logout(
     @Req() req: authTypes.RequestWithCookies,
