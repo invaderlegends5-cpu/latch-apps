@@ -230,9 +230,10 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-          name: latch-auth-unit-results
-          path: ${{ env.CI_ARTIFACT_PATH }}/junit.xml
-          if-no-files-found: ignore
+        name: latch-auth-unit-results
+        path: ${{ env.CI_ARTIFACT_PATH }} # Upload the whole directory: latch-auth-ci-artifacts/
+        if-no-files-found: ignore
+        
   security-tests:
       name: Security Tests
       runs-on: ubuntu-latest
