@@ -177,7 +177,22 @@ jobs:
         bun install --frozen-lockfile
         npx prisma generate
         bunx jest --ci --runInBand --no-colors --coverage --forceExit 2>&1 | tee test-output.log
-                  
+            
+    - name: Debug - Check JUnit file exists
+      working-directory: apps/latch-auth # Ensure we are looking in the right place
+      run: |
+        echo "Looking for junit.xml at: latch-auth-ci-artifacts/junit.xml"
+        if [ -f latch-auth-ci-artifacts/junit.xml ]; then
+          echo "✅ junit.xml EXISTS"
+          ls -la latch-auth-ci-artifacts/
+        else
+          echo "❌ junit.xml does NOT exist at latch-auth-ci-artifacts/junit.xml"
+          echo "Contents of apps/latch-auth/:"
+          ls -la
+          echo "Contents of latch-auth-ci-artifacts/ (if it exists):"
+          ls -la latch-auth-ci-artifacts/ 2>/dev/null || echo "latch-auth-ci-artifacts/ does not exist"
+        fi
+
     - name: Extract Coverage from Log
       id: coverage
       working-directory: apps/latch-auth
