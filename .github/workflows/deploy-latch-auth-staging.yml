@@ -105,7 +105,20 @@ jobs:
       - name: Run Latch Auth (Background) and Verify Health
         working-directory: apps/latch-auth
         run: |
+          
+
+    
+          NETWORK=$(docker network ls --format '{{.Name}}' | grep 'github_network')
+          if [ -z "$NETWORK" ]; then
+            echo "❌ No GitHub service network found. Available networks:"
+            docker network ls
+            exit 1
+          fi
+
+          echo "Found GitHub service network: $NETWORK"
+
           docker run -d --name latch_auth_staging \
+            --network "$NETWORK" \
             -e DATABASE_URL="postgresql://postgres:postgres@postgres:5432/latch_auth" \
             -e REDIS_URL="redis://redis:6379" \
             -e EVENT_SIGNING_SECRET="${{ env.EVENT_SIGNING_SECRET }}" \
@@ -128,17 +141,16 @@ jobs:
 
           if [ "$HEALTH_CHECK_SUCCESS" = "false" ]; then
             echo "❌ Health verification failed after waiting!"
-            docker logs latch_auth_staging # Log container output to see why it failed
-            exit 1 # Fail the step if not healthy
+            docker logs latch_auth_staging
+            exit 1
           fi
 
           echo "✅ /v1/health verified successfully."
-
-      - name: Debug Staging Container Logs
-        if: always() 
-        run: |
-          echo "Dumping logs for debugging:"
-          docker logs latch_auth_staging
+            - name: Debug Staging Container Logs
+              if: always() 
+              run: |
+                echo "Dumping logs for debugging:"
+                docker logs latch_auth_staging
 
       # - name: Verify /v1/health Endpoint
       #   run: |
