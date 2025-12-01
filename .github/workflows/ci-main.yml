@@ -101,16 +101,29 @@ jobs:
         run: |
           echo "Updating all known dependencies to resolve vulnerabilities..."
           
-          # Target NestJS, Testing, and Validation parent dependencies
+          # Explicitly target the vulnerable packages first
+          echo "Updating glob to fix high severity command injection..."
+          bun update glob@^11.1.0
+
+          echo "Updating packages that depend on body-parser/js-yaml..."
+          # Update common NestJS and testing packages
           bun update @nestjs/cli @nestjs/platform-express @nestjs/swagger \
             jest ts-jest jest-mock-extended \
-            class-validator
-            
+            class-validator \
+            @eslint/eslintrc
+
           # Target direct Sentry dependency
           bun update @sentry/node
           
+          # If glob update above fails due to constraints, try updating its direct parent if known and listed
+          # Example: bun update some-direct-parent-of-glob-if-applicable
+          
           # Reinstall to ensure the lockfile reflects the new, patched versions
+          # Use --force if necessary to ensure lockfile regeneration aligns with updated dependency tree
           bun install --frozen-lockfile
+          # If --frozen-lockfile fails due to lockfile conflicts after updates, you might need:
+          # bun install # (without --frozen-lockfile) to regenerate the lockfile based on updated package.json
+          # Then commit the new bun.lockb file.
           
           echo "Updates complete. Proceeding to audit."
 
