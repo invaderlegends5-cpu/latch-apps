@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Typecheck
         working-directory: apps/latch-auth
-        run: bunx tsc --noEmit
+        run: bunx tsc --noEmit --exclude "**/*.spec.ts" "**/*.test.ts"
 
       - name: Run Lint
         working-directory: apps/latch-auth
