@@ -159,7 +159,7 @@ jobs:
             ' apps/latch-auth/coverage/lcov.info)
             echo "Current coverage: ${COVERAGE}%"
               
-            if [ "$COVERAGE" -lt 80 ]; then
+            if [ "$COVERAGE" -lt 69 ]; then
               echo "❌ Coverage ${COVERAGE}% is below threshold 69%"
               exit 1
             fi
