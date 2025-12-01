@@ -1,0 +1,14 @@
+{
+    "root": true,
+    "extends": ["@nestjs/eslint-config", "prettier"],
+    "ignorePatterns": ["dist", "node_modules"],
+    "overrides": [
+      {
+        "files": ["*.ts"],
+        "parserOptions": {
+          "project": ["./latch-apps/apps/latch-auth/tsconfig.json"]
+        }
+      }
+    ]
+  }
+  
