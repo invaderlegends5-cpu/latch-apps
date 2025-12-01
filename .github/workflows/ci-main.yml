@@ -162,8 +162,8 @@ jobs:
           if [ -f "apps/latch-auth/coverage/lcov.info" ]; then
             # Extract overall line coverage
               COVERAGE=$(awk '
-              /^LF:/ { lf = $2 }
-              /^LH:/ { lh = $2 }
+              /^LF:/ { total_lines += $2 }
+              /^LH:/ { hit_lines += $2 }
               END {
                 if (lf > 0) {
                   printf "%.0f", (lh/lf)*100
