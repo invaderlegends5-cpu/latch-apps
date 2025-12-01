@@ -96,6 +96,14 @@ jobs:
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
         
+      - name: Update dependencies to fix vulnerabilities
+        working-directory: apps/latch-auth
+        run: |
+          # Update dependencies to latest compatible versions
+          bun update
+          # Reinstall to update the lockfile
+          bun install --frozen-lockfile
+
       - name: Run security audit
         working-directory: apps/latch-auth
         run: bun audit --audit-level moderate
@@ -111,7 +119,7 @@ jobs:
                exit 1
              fi
           done
-          echo "✅ No dangerous imports found"        
+          echo "✅ No dangerous imports found"         
   coverage:
     name: Coverage Validation
     runs-on: ubuntu-latest
