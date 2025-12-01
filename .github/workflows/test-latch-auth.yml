@@ -59,7 +59,11 @@ jobs:
 
       - name: Install Dependencies
         working-directory: apps/latch-auth
-        run: bun install --frozen-lockfile
+        run: bun install 
+
+      - name: Clear Jest Cache
+        working-directory: apps/latch-auth
+        run: npx jest --clearCache
 
       - name: Generate Prisma Client
         working-directory: apps/latch-auth
