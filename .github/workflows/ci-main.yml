@@ -148,6 +148,14 @@ jobs:
             echo "latch-auth-ci-artifacts directory does not exist"
           fi    
 
+      - name: Debug - Check lcov.info content
+        run: |
+          echo "First 20 lines of lcov.info:"
+          head -n 20 apps/latch-auth/coverage/lcov.info
+          echo "..."
+          echo "Last 20 lines of lcov.info:"
+          tail -n 20 apps/latch-auth/coverage/lcov.info
+
       - name: Check coverage thresholds
         run: |
           # Check if coverage meets minimum thresholds (80%)
