@@ -92,17 +92,17 @@ jobs:
         with:
           bun-version: latest
         
-      - name: Install dependencies
+      - name: Install dependencies (initial)
         working-directory: apps/latch-auth
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile # Start with the checked-in lockfile
         
       - name: Update dependencies to latest versions (including breaking changes)
         working-directory: apps/latch-auth
         run: |
-          # Update ALL dependencies to latest, potentially including breaking changes
+          # Update ALL dependencies to their latest versions allowed by semver
           bun update --latest
-          # Reinstall to update the lockfile (use 'bun install' without --frozen-lockfile)
-          bun install # FIX: Changed from bun install --frozen-lockfile
+          # Reinstall to regenerate the lockfile based on the new resolutions
+          bun install
 
       - name: Run security audit
         working-directory: apps/latch-auth
@@ -119,7 +119,7 @@ jobs:
                exit 1
              fi
           done
-          echo "✅ No dangerous imports found"        
+          echo "✅ No dangerous imports found"                
 
   coverage:
     name: Coverage Validation
