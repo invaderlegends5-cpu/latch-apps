@@ -579,22 +579,18 @@ export class RateLimitingService implements OnModuleInit, OnModuleDestroy {
             where: { id: defaultProfile.tenantId },
         });
 
-       // Replace the if (!tenant) block with an upsert
-tenant = await this.prisma.tenant.upsert({
-  where: { id: defaultProfile.tenantId },
-  update: {
-    // Define what to update if the tenant already exists (e.g., name, updatedAt)
-    // Or leave empty if you only want to ensure it exists and don't need to update fields
-    name: `Default Tenant for Profile ${defaultProfile.name}`, // Example: update name if exists
-    // Add other fields you might want to update if the tenant already exists
-  },
-  create: {
-    id: defaultProfile.tenantId,
-    name: `Default Tenant for Profile ${defaultProfile.name}`,
-    slug: `Add slug ${defaultProfile.name}${defaultProfile.tenantId}`, // Consider making this unique or deriving from tenantId/name
-    // Add any other required fields for your Tenant model
-  },
-});
+        if (!tenant) {
+            this.logger.log(`Tenant ${defaultProfile.tenantId} not found, creating a placeholder tenant.`);
+            // Create a minimal parent tenant record first
+            tenant = await this.prisma.tenant.create({
+                data: {
+                    id: defaultProfile.tenantId,
+                    name: `Default Tenant for Profile ${defaultProfile.name}`,
+                    slug: `Default Tenant for Profile ${defaultProfile.name}${defaultProfile.tenantId}`,
+                    // Add any other required fields for your Tenant model
+                },
+            });
+        }
 
 
         // 2. Now attempt to create the profile for the guaranteed-existing tenant

@@ -1,111 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="53" failures="0" errors="0" time="164.493">
-  <testsuite name="TenantsService" errors="0" failures="0" skipped="0" timestamp="2025-11-30T06:19:31" time="160.708" tests="53">
-    <testcase classname="TenantsService should be defined" name="TenantsService should be defined" time="0.281">
+<testsuites name="jest tests" tests="3" failures="0" errors="0" time="58.944">
+  <testsuite name="TenantsController Lifecycle Integration Tests" errors="0" failures="0" skipped="0" timestamp="2025-12-01T12:04:07" time="57.229" tests="3">
+    <testcase classname="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should successfully execute the full tenant lifecycle via HTTP requests" name="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should successfully execute the full tenant lifecycle via HTTP requests" time="2.378">
     </testcase>
-    <testcase classname="TenantsService findAll should return cached results if available" name="TenantsService findAll should return cached results if available" time="0.031">
+    <testcase classname="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should reject activating an already active tenant" name="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should reject activating an already active tenant" time="0.109">
     </testcase>
-    <testcase classname="TenantsService findAll should fetch from database and cache results if not cached" name="TenantsService findAll should fetch from database and cache results if not cached" time="0.044">
-    </testcase>
-    <testcase classname="TenantsService findAll should validate pagination parameters" name="TenantsService findAll should validate pagination parameters" time="0.542">
-    </testcase>
-    <testcase classname="TenantsService findAll should include counts when requested" name="TenantsService findAll should include counts when requested" time="0.031">
-    </testcase>
-    <testcase classname="TenantsService findOne should return cached basic tenant if available" name="TenantsService findOne should return cached basic tenant if available" time="0.034">
-    </testcase>
-    <testcase classname="TenantsService findOne should return cached tenant with data if available and includeStats is false" name="TenantsService findOne should return cached tenant with data if available and includeStats is false" time="0.033">
-    </testcase>
-    <testcase classname="TenantsService findOne should fetch from database if not cached and cache the result" name="TenantsService findOne should fetch from database if not cached and cache the result" time="0.035">
-    </testcase>
-    <testcase classname="TenantsService findOne should return tenant with stats when includeStats is true" name="TenantsService findOne should return tenant with stats when includeStats is true" time="0.065">
-    </testcase>
-    <testcase classname="TenantsService findOne should throw NotFoundException when tenant not found" name="TenantsService findOne should throw NotFoundException when tenant not found" time="0.038">
-    </testcase>
-    <testcase classname="TenantsService findOne should cache and return cached stats when includeStats is true" name="TenantsService findOne should cache and return cached stats when includeStats is true" time="0.04">
-    </testcase>
-    <testcase classname="TenantsService create should create a tenant successfully" name="TenantsService create should create a tenant successfully" time="0.029">
-    </testcase>
-    <testcase classname="TenantsService create should create a tenant with security settings" name="TenantsService create should create a tenant with security settings" time="0.014">
-    </testcase>
-    <testcase classname="TenantsService create should create a tenant with default role and link it to policy" name="TenantsService create should create a tenant with default role and link it to policy" time="0.014">
-    </testcase>
-    <testcase classname="TenantsService create should validate slug format" name="TenantsService create should validate slug format" time="0.014">
-    </testcase>
-    <testcase classname="TenantsService create should validate name format" name="TenantsService create should validate name format" time="0.087">
-    </testcase>
-    <testcase classname="TenantsService create should throw BadRequestException when slug already exists" name="TenantsService create should throw BadRequestException when slug already exists" time="0.025">
-    </testcase>
-    <testcase classname="TenantsService create should log security event when creating tenant" name="TenantsService create should log security event when creating tenant" time="0.026">
-    </testcase>
-    <testcase classname="TenantsService create should invalidate tenant list cache after successful creation" name="TenantsService create should invalidate tenant list cache after successful creation" time="0.032">
-    </testcase>
-    <testcase classname="TenantsService update should update tenant successfully" name="TenantsService update should update tenant successfully" time="0.028">
-    </testcase>
-    <testcase classname="TenantsService update should validate tenant name format" name="TenantsService update should validate tenant name format" time="0.035">
-    </testcase>
-    <testcase classname="TenantsService update should throw NotFoundException when tenant not found" name="TenantsService update should throw NotFoundException when tenant not found" time="0.085">
-    </testcase>
-    <testcase classname="TenantsService update should update tenant policy when provided" name="TenantsService update should update tenant policy when provided" time="0.048">
-    </testcase>
-    <testcase classname="TenantsService update should update tenant with complex security settings" name="TenantsService update should update tenant with complex security settings" time="0.082">
-    </testcase>
-    <testcase classname="TenantsService update should update tenant with multiple policy fields at once" name="TenantsService update should update tenant with multiple policy fields at once" time="0.03">
-    </testcase>
-    <testcase classname="TenantsService update should log security event when updating tenant" name="TenantsService update should log security event when updating tenant" time="0.029">
-    </testcase>
-    <testcase classname="TenantsService update should invalidate tenant caches after successful update" name="TenantsService update should invalidate tenant caches after successful update" time="0.025">
-    </testcase>
-    <testcase classname="TenantsService update should throw BadRequestException when tenant policy update fails" name="TenantsService update should throw BadRequestException when tenant policy update fails" time="0.369">
-    </testcase>
-    <testcase classname="TenantsService remove should suspend tenant successfully" name="TenantsService remove should suspend tenant successfully" time="0.023">
-    </testcase>
-    <testcase classname="TenantsService remove should throw BadRequestException when tenant is already suspended" name="TenantsService remove should throw BadRequestException when tenant is already suspended" time="0.055">
-    </testcase>
-    <testcase classname="TenantsService remove should throw NotFoundException when tenant not found" name="TenantsService remove should throw NotFoundException when tenant not found" time="0.035">
-    </testcase>
-    <testcase classname="TenantsService remove should log security event when suspending tenant" name="TenantsService remove should log security event when suspending tenant" time="0.023">
-    </testcase>
-    <testcase classname="TenantsService remove should invalidate tenant caches after successful suspension" name="TenantsService remove should invalidate tenant caches after successful suspension" time="0.019">
-    </testcase>
-    <testcase classname="TenantsService activate should activate tenant successfully" name="TenantsService activate should activate tenant successfully" time="0.014">
-    </testcase>
-    <testcase classname="TenantsService activate should throw BadRequestException when tenant is already active" name="TenantsService activate should throw BadRequestException when tenant is already active" time="0.019">
-    </testcase>
-    <testcase classname="TenantsService activate should throw NotFoundException when tenant not found" name="TenantsService activate should throw NotFoundException when tenant not found" time="0.013">
-    </testcase>
-    <testcase classname="TenantsService activate should log security event when activating tenant" name="TenantsService activate should log security event when activating tenant" time="0.116">
-    </testcase>
-    <testcase classname="TenantsService activate should invalidate tenant caches after successful activation" name="TenantsService activate should invalidate tenant caches after successful activation" time="0.013">
-    </testcase>
-    <testcase classname="TenantsService exists should return true when tenant exists" name="TenantsService exists should return true when tenant exists" time="0.049">
-    </testcase>
-    <testcase classname="TenantsService exists should return false when tenant does not exist" name="TenantsService exists should return false when tenant does not exist" time="0.032">
-    </testcase>
-    <testcase classname="TenantsService getTenantStats should return tenant stats" name="TenantsService getTenantStats should return tenant stats" time="0.022">
-    </testcase>
-    <testcase classname="TenantsService getTenantStats should throw NotFoundException when tenant not found" name="TenantsService getTenantStats should throw NotFoundException when tenant not found" time="0.02">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should sanitize valid branding" name="TenantsService sanitizeBranding should sanitize valid branding" time="0.021">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should reject invalid HTTPS URLs" name="TenantsService sanitizeBranding should reject invalid HTTPS URLs" time="0.02">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should reject private IP addresses" name="TenantsService sanitizeBranding should reject private IP addresses" time="0.026">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should sanitize company name to prevent XSS" name="TenantsService sanitizeBranding should sanitize company name to prevent XSS" time="0.032">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should handle empty branding object" name="TenantsService sanitizeBranding should handle empty branding object" time="0.027">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should reject invalid color formats" name="TenantsService sanitizeBranding should reject invalid color formats" time="0.032">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should reject URLs with private IP addresses" name="TenantsService sanitizeBranding should reject URLs with private IP addresses" time="0.032">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should sanitize company name with various XSS characters" name="TenantsService sanitizeBranding should sanitize company name with various XSS characters" time="0.037">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should handle URL with query parameters and fragments" name="TenantsService sanitizeBranding should handle URL with query parameters and fragments" time="0.033">
-    </testcase>
-    <testcase classname="TenantsService sanitizeBranding should truncate long company names" name="TenantsService sanitizeBranding should truncate long company names" time="0.036">
-    </testcase>
-    <testcase classname="TenantsService invalidateTenantListCache should invalidate tenant list cache" name="TenantsService invalidateTenantListCache should invalidate tenant list cache" time="0.047">
+    <testcase classname="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should invalidate cache after update, forcing a fresh read on subsequent list" name="TenantsController Lifecycle Integration Tests Full Tenant Lifecycle: Create -&gt; Update -&gt; Deactivate -&gt; Activate -&gt; Read should invalidate cache after update, forcing a fresh read on subsequent list" time="0.003">
     </testcase>
   </testsuite>
 </testsuites>
