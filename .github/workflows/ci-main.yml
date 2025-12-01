@@ -35,47 +35,49 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
+    
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-
+        
       - name: Install deps (lint lane)
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
-
+        
+      - name: Migrate ESLint Config for v9
+        working-directory: apps/latch-auth
+        run: |
+          # Generate a flat config file using the migrator
+          bunx @eslint/migrate-config .eslintrc.json
+          # The migrator creates eslint.config.js
+        
       - name: Run Typecheck
         working-directory: apps/latch-auth
         run: bunx tsc --noEmit --project tsconfig.lint.json
-
+        
       - name: Run Lint
         working-directory: apps/latch-auth
-        run: bunx eslint "src/**/*.ts" || true
-
+        run: bunx eslint "src/**/*.ts" --quiet || true
+        
       - name: Generate Lint Summary
         id: summary
         working-directory: apps/latch-auth
         run: |
-          # Run ESLint directly on src directory using the glob pattern from package.json
-          # This might help isolate the config issue
-          LINT_OUTPUT=$(bunx eslint "src/**/*.ts" --fix --quiet 2>&1)
-          LINT_EXIT_CODE=$?
-          
-          if [ $LINT_EXIT_CODE -eq 0 ]; then
+          OUTPUT=$(bunx eslint "src/**/*.ts" --quiet 2>&1)
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
             SUMMARY="✅ Lint passed"
-          elif [ $LINT_EXIT_CODE -eq 1 ]; then
-            # Exit code 1 usually means lint problems found, but not config errors
-            ERR_COUNT=$(echo "$LINT_OUTPUT" | wc -l)
+          elif [ $EXIT_CODE -eq 1 ]; then
+            # Lint errors found
+            ERR_COUNT=$(echo "$OUTPUT" | wc -l)
             SUMMARY="❌ Lint issues found ($ERR_COUNT items)"
           else
-            # Exit code 2 or other usually means configuration or other error
-            echo "❌ Lint command failed with exit code $LINT_EXIT_CODE"
-            echo "Output: $LINT_OUTPUT"
-            SUMMARY="❌ Lint command failed (exit code $LINT_EXIT_CODE)"
+            # Configuration or other error (shouldn't happen now with flat config)
+            SUMMARY="❌ Lint command failed (config issue)"
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-
+        
       - name: Upload Lint Artifact
         if: always()
         uses: actions/upload-artifact@v4
