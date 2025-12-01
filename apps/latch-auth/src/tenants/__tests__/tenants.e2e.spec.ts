@@ -318,48 +318,48 @@ describe('TenantsController (e2e)', () => {
   });
 
   describe('GET /v1/tenants - Authorization Tests', () => {
-    // it('should allow SUPER_ADMIN to list all tenants', async () => {
-    //   // TO MOVE
-    //   console.log("Starting test: should allow SUPER_ADMIN to list all tenants...");
-    //   const token = jwtService.sign({
-    //     sub: 'super-admin-id',
-    //     id: 'super-admin-id',
-    //     email: 'superadmin@test.com',
-    //     tenantId: 'system-tenant',
-    //     sessionId: 'session-id-super',
-    //     mfa: false
-    //   }, { secret: 'dev_jwt_secret_change_me' });
+    it('should allow SUPER_ADMIN to list all tenants', async () => {
+      // TO MOVE
+      console.log("Starting test: should allow SUPER_ADMIN to list all tenants...");
+      const token = jwtService.sign({
+        sub: 'super-admin-id',
+        id: 'super-admin-id',
+        email: 'superadmin@test.com',
+        tenantId: 'system-tenant',
+        sessionId: 'session-id-super',
+        mfa: false
+      }, { secret: 'dev_jwt_secret_change_me' });
     
-    //   // Mock user roles for authorization
-    //   const userRoleSpy = jest.spyOn(prisma.userRole, 'findMany');
-    //   userRoleSpy.mockResolvedValue([
-    //     { role: { name: 'SUPER_ADMIN', tenantId: 'system-tenant',isSystem: true, privileges: ['cross_tenant_access'] } }
-    //   ]);
-    //   console.log("Overrode userRole.findMany to return SUPER_ADMIN role");
+      // Mock user roles for authorization
+      const userRoleSpy = jest.spyOn(prisma.userRole, 'findMany');
+      userRoleSpy.mockResolvedValue([
+        { role: { name: 'SUPER_ADMIN', tenantId: 'system-tenant',isSystem: true, privileges: ['cross_tenant_access'] } }
+      ]);
+      console.log("Overrode userRole.findMany to return SUPER_ADMIN role");
     
-    //   // Mock tenant listing
-    //   jest.spyOn(prisma.tenant, 'findMany').mockResolvedValue([
-    //     { id: 'tenant-1', name: 'Tenant One', slug: 'tenant-one', status: 'ACTIVE', createdAt: new Date(), updatedAt: new Date() },
-    //     { id: 'tenant-2', name: 'Tenant Two', slug: 'tenant-two', status: 'ACTIVE', createdAt: new Date(), updatedAt: new Date() }
-    //   ]);
+      // Mock tenant listing
+      jest.spyOn(prisma.tenant, 'findMany').mockResolvedValue([
+        { id: 'tenant-1', name: 'Tenant One', slug: 'tenant-one', status: 'ACTIVE', createdAt: new Date(), updatedAt: new Date() },
+        { id: 'tenant-2', name: 'Tenant Two', slug: 'tenant-two', status: 'ACTIVE', createdAt: new Date(), updatedAt: new Date() }
+      ]);
     
-    //   // Mock the count method for pagination
-    //   jest.spyOn(prisma.tenant, 'count').mockResolvedValue(2);
+      // Mock the count method for pagination
+      jest.spyOn(prisma.tenant, 'count').mockResolvedValue(2);
     
-    //   return request(app.getHttpServer())
-    //     .get('/v1/tenants')
-    //     .set('Authorization', `Bearer ${token}`)
-    //     .set('X-Tenant-Slug', 'system-tenant')
-    //     .expect(200)
-    //     .then(response => {
-    //       console.log('GET /v1/tenants response:', response.body);  // Debug log
-    //       // The response might have a different structure, let's adapt
-    //       expect(response.body).toHaveProperty('meta'); // This should exist
-    //       // Check if it has data or another property name
-    //       expect(response.body).toHaveProperty('data'); // If it has data property
-    //       // Or check if it's just an array: expect(Array.isArray(response.body)).toBe(true);
-    //     });
-    // });
+      return request(app.getHttpServer())
+        .get('/v1/tenants')
+        .set('Authorization', `Bearer ${token}`)
+        .set('X-Tenant-Slug', 'system-tenant')
+        .expect(200)
+        .then(response => {
+          console.log('GET /v1/tenants response:', response.body);  // Debug log
+          // The response might have a different structure, let's adapt
+          expect(response.body).toHaveProperty('meta'); // This should exist
+          // Check if it has data or another property name
+          expect(response.body).toHaveProperty('data'); // If it has data property
+          // Or check if it's just an array: expect(Array.isArray(response.body)).toBe(true);
+        });
+    });
 
     it('should allow ADMIN to list tenants with tenant isolation', async () => {
       const token = jwtService.sign({
