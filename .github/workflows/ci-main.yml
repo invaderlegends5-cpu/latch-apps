@@ -45,17 +45,42 @@ jobs:
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
         
+      - name: Setup ESLint Flat Config using FlatCompat
+        working-directory: apps/latch-auth
+        run: |
+          # Install the compatibility package
+          bun add --dev @eslint/eslintrc
+          
+          # Create eslint.config.js using FlatCompat to wrap the existing .eslintrc.json
+          cat > eslint.config.js << 'EOF'
+          import { FlatCompat } from "@eslint/eslintrc";
+          import path from "path";
+          import { fileURLToPath } from "url";
+        
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = path.dirname(__filename);
+          const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            resolvePluginsRelativeTo: __dirname // Ensure plugins are resolved relative to the project root
+          });
+        
+          // Load the existing .eslintrc.json configuration using FlatCompat
+          // This should handle the "@nestjs/eslint-config" extension if it's resolvable via installed dependencies
+          export default [
+            ...compat.extends("./.eslintrc.json")
+          ];
+          EOF
+        
       - name: Run Typecheck
         working-directory: apps/latch-auth
         run: bunx tsc --noEmit --project tsconfig.lint.json
         
-      - name: Generate Lint Summary (Ignore Config Errors)
+      - name: Generate Lint Summary
         id: summary
         working-directory: apps/latch-auth
         run: |
           OUTPUT=$(bunx eslint "src/**/*.ts" --quiet 2>&1)
           EXIT_CODE=$?
-          
           if [ $EXIT_CODE -eq 0 ]; then
             SUMMARY="✅ Lint passed"
           elif [ $EXIT_CODE -eq 1 ]; then
@@ -63,13 +88,10 @@ jobs:
             ERR_COUNT=$(echo "$OUTPUT" | wc -l)
             SUMMARY="❌ Lint issues found ($ERR_COUNT items)"
           else
-            # Configuration error or other issue (e.g., exit code 2)
-            # Check if it's a config resolution error
-            if echo "$OUTPUT" | grep -q "ESLint couldn't find the config"; then
-              SUMMARY="⚠️ Lint config issue (see unit tests for actual lint results)"
-            else
-              SUMMARY="❌ Lint command failed (exit code $EXIT_CODE)"
-            fi
+            # Configuration or other error
+            echo "❌ Lint command failed with exit code $EXIT_CODE"
+            echo "Output: $OUTPUT"
+            SUMMARY="❌ Lint command failed (exit code $EXIT_CODE)"
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
         
