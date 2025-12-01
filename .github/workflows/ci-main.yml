@@ -114,13 +114,28 @@ jobs:
         working-directory: apps/latch-auth
         run: |
           echo "Checking for dangerous imports..."
-          DANGEROUS_IMPORTS=("child_process" "fs" "vm" "eval" "exec" "spawn" "require" "import")
+          # NOTE: The regex is made more specific to match the module name inside quotes or parentheses.
+          DANGEROUS_IMPORTS=("child_process" "fs" "vm" "eval")
+          DANGEROUS_FUNCTIONS=("exec" "spawn" "require")
+          
+          # Check for module imports (using double or single quotes)
           for IMPORT in "${DANGEROUS_IMPORTS[@]}"; do
-            if grep -r "from.*$IMPORT\|require.*$IMPORT\|import.*$IMPORT" ./src --include="*.ts" --exclude-dir=node_modules; then
+            # Searches for: from "fs" or require('fs') or import('fs')
+            if grep -r -E "(from ['\"]$IMPORT['\"]|require\(['\"]$IMPORT['\"]|import\(['\"]$IMPORT['\"]\)" ./src --include="*.ts" --exclude-dir=node_modules; then
               echo "❌ Found dangerous import: $IMPORT"
-               exit 1
-             fi
+              exit 1
+            fi
           done
+          
+          # Check for dangerous function calls (excluding 'import')
+          for FUNC in "${DANGEROUS_FUNCTIONS[@]}"; do
+            # Searches for: func( or func (` to avoid false positives like "required"
+            if grep -r -E "\W$FUNC\s*\(" ./src --include="*.ts" --exclude-dir=node_modules; then
+              echo "❌ Found dangerous function call: $FUNC"
+              exit 1
+            fi
+          done
+          
           echo "✅ No dangerous imports found"         
   coverage:
     name: Coverage Validation
