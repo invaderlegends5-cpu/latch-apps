@@ -122,7 +122,6 @@ jobs:
           path: apps/latch-auth/
 
       - name: Check coverage thresholds
-        working-directory: apps/latch-auth
         run: |
           # Check if coverage meets minimum thresholds (80%)
           if [ -f "latch-auth-ci-artifacts/coverage/lcov.info" ]; then
