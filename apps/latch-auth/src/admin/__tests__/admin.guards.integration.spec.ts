@@ -419,146 +419,146 @@ describe('Admin Guard Integration Tests', () => {
       expect(response.body).toHaveProperty('message');
     });
 
-  //   it('should allow ADMIN users to access ADMIN endpoints', async () => {
-  //     // TO MOVE
-  //     const userId = 'admin-user-id';
-  //     const tenantId = 'tenant-id';
-  //     const tenantSlug = 'tenant-slug-for-tenant-id';
-  //     const sessionId = 'valid-session-id';
-  //     const csrfToken = 'valid-csrf-token';
-  //     const payload: JwtPayload = {
-  //         sub: userId,
-  //         sessionId: sessionId,
-  //         tenantId: tenantId,
-  //         csrfToken: csrfToken,
-  //         // Expires in 24 hours
-  //         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-  //     };
+    it('should allow ADMIN users to access ADMIN endpoints', async () => {
+      // TO MOVE
+      const userId = 'admin-user-id';
+      const tenantId = 'tenant-id';
+      const tenantSlug = 'tenant-slug-for-tenant-id';
+      const sessionId = 'valid-session-id';
+      const csrfToken = 'valid-csrf-token';
+      const payload: JwtPayload = {
+          sub: userId,
+          sessionId: sessionId,
+          tenantId: tenantId,
+          csrfToken: csrfToken,
+          // Expires in 24 hours
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+      };
 
-  //     const token = generateValidJwtToken(payload);
+      const token = generateValidJwtToken(payload);
 
-  //     // Mock successful JWT validation
-  //     mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
+      // Mock successful JWT validation
+      mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
 
-  //     // Mock the PrismaService calls for RoleGuard (ADMIN role)
-  //     (prisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue({
-  //       id: userId,
-  //       tenantId: tenantId,
-  //     });
-  //     (prisma.userRole.findMany as jest.MockedFunction<any>).mockResolvedValue([
-  //       {
-  //         userId: userId,
-  //         roleId: 'admin-role-id',
-  //         role: {
-  //           id: 'admin-role-id',
-  //           name: 'ADMIN',
-  //           tenantId: tenantId,
-  //           isSystem: false,
-  //           isActive: true,
-  //           createdAt: new Date(),
-  //           validFrom: new Date(),
-  //           validUntil: new Date(),
-  //         },
-  //       },
-  //     ]);
+      // Mock the PrismaService calls for RoleGuard (ADMIN role)
+      (prisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue({
+        id: userId,
+        tenantId: tenantId,
+      });
+      (prisma.userRole.findMany as jest.MockedFunction<any>).mockResolvedValue([
+        {
+          userId: userId,
+          roleId: 'admin-role-id',
+          role: {
+            id: 'admin-role-id',
+            name: 'ADMIN',
+            tenantId: tenantId,
+            isSystem: false,
+            isActive: true,
+            createdAt: new Date(),
+            validFrom: new Date(),
+            validUntil: new Date(),
+          },
+        },
+      ]);
 
-  //       // Mock Tenant lookup for TenantGuard based on the SLUG provided in the header
-  // // This mock should return a tenant object where the 'id' matches the user's tenantId ('tenant-id')
-  // // to allow the tenant isolation check to pass.
-  // (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
-  //   id: tenantId, // Matches the user's tenantId from the token
-  //   name: 'Test Tenant',
-  //   slug: tenantSlug, // The slug that matches the header value
-  //   status: 'ACTIVE',
-  //   createdAt: new Date(),
-  //   updatedAt: new Date(),
-  // });
+        // Mock Tenant lookup for TenantGuard based on the SLUG provided in the header
+  // This mock should return a tenant object where the 'id' matches the user's tenantId ('tenant-id')
+  // to allow the tenant isolation check to pass.
+  (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
+    id: tenantId, // Matches the user's tenantId from the token
+    name: 'Test Tenant',
+    slug: tenantSlug, // The slug that matches the header value
+    status: 'ACTIVE',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 
-  //     // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
-  //     const mockUsers = [{ id: 'user1', name: 'User One', email: 'user1@example.com', tenantId, roles: [] }];
-  //     (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
-  //     (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
+      // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
+      const mockUsers = [{ id: 'user1', name: 'User One', email: 'user1@example.com', tenantId, roles: [] }];
+      (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
+      (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
 
-  //     const response = await request(app.getHttpServer())
-  //       .get('/v1/admin/users')
-  //       .set('Authorization', `Bearer ${token}`) // Use the generated token
-  //       .set('x-csrf-token', csrfToken) // Needed for CSRF guard
-  //       .set('x-tenant-slug', tenantSlug)
-  //       .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Needed for CSRF guard
-  //       .expect(200); // Should now pass all guards and get users data
+      const response = await request(app.getHttpServer())
+        .get('/v1/admin/users')
+        .set('Authorization', `Bearer ${token}`) // Use the generated token
+        .set('x-csrf-token', csrfToken) // Needed for CSRF guard
+        .set('x-tenant-slug', tenantSlug)
+        .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Needed for CSRF guard
+        .expect(200); // Should now pass all guards and get users data
 
-  //     expect(response.body).toHaveProperty('data');
-  //     expect(response.body).toHaveProperty('meta');
-  //   });
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('meta');
+    });
 
-    // it('should allow SUPER_ADMIN users to access ADMIN endpoints', async () => {
-    //   // TO MOVE
-    //   const userId = 'super-admin-user-id';
-    //   const tenantId = 'tenant-id';
-    //   const tenantSlug = 'tenant-slug-for-tenant-id';
-    //   const sessionId = 'valid-session-id';
-    //   const csrfToken = 'valid-csrf-token';
-    //   const payload: JwtPayload = {
-    //       sub: userId,
-    //       sessionId: sessionId,
-    //       tenantId: tenantId,
-    //       csrfToken: csrfToken,
-    //       // Expires in 24 hours
-    //       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-    //   };
+    it('should allow SUPER_ADMIN users to access ADMIN endpoints', async () => {
+      // TO MOVE
+      const userId = 'super-admin-user-id';
+      const tenantId = 'tenant-id';
+      const tenantSlug = 'tenant-slug-for-tenant-id';
+      const sessionId = 'valid-session-id';
+      const csrfToken = 'valid-csrf-token';
+      const payload: JwtPayload = {
+          sub: userId,
+          sessionId: sessionId,
+          tenantId: tenantId,
+          csrfToken: csrfToken,
+          // Expires in 24 hours
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+      };
 
-    //   const token = generateValidJwtToken(payload);
+      const token = generateValidJwtToken(payload);
 
-    //   // Mock successful JWT validation
-    //   mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
+      // Mock successful JWT validation
+      mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
 
-    //   // Mock the PrismaService calls for RoleGuard (SUPER_ADMIN role)
-    //   (prisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue({
-    //     id: userId,
-    //     tenantId: tenantId,
-    //   });
-    //   (prisma.userRole.findMany as jest.MockedFunction<any>).mockResolvedValue([
-    //     {
-    //       userId: userId,
-    //       roleId: 'super-admin-role-id',
-    //       role: {
-    //         id: 'super-admin-role-id',
-    //         name: 'SUPER_ADMIN',
-    //         tenantId: tenantId,
-    //         isSystem: false,
-    //         isActive: true,
-    //         createdAt: new Date(),
-    //         validFrom: new Date(),
-    //         validUntil: new Date(),
-    //       },
-    //     },
-    //   ]);
+      // Mock the PrismaService calls for RoleGuard (SUPER_ADMIN role)
+      (prisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue({
+        id: userId,
+        tenantId: tenantId,
+      });
+      (prisma.userRole.findMany as jest.MockedFunction<any>).mockResolvedValue([
+        {
+          userId: userId,
+          roleId: 'super-admin-role-id',
+          role: {
+            id: 'super-admin-role-id',
+            name: 'SUPER_ADMIN',
+            tenantId: tenantId,
+            isSystem: false,
+            isActive: true,
+            createdAt: new Date(),
+            validFrom: new Date(),
+            validUntil: new Date(),
+          },
+        },
+      ]);
 
-    //   (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
-    //     id: tenantId, // Matches the user's tenantId from the token
-    //     name: 'Test Tenant',
-    //     slug: tenantSlug, // The slug that matches the header value
-    //     status: 'ACTIVE',
-    //     createdAt: new Date(),
-    //     updatedAt: new Date(),
-    //   });
+      (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
+        id: tenantId, // Matches the user's tenantId from the token
+        name: 'Test Tenant',
+        slug: tenantSlug, // The slug that matches the header value
+        status: 'ACTIVE',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
       
-    //   // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
-    //   const mockUsers = [{ id: 'user2', name: 'User Two', email: 'user2@example.com', tenantId, roles: [] }];
-    //   (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
-    //   (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
+      // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
+      const mockUsers = [{ id: 'user2', name: 'User Two', email: 'user2@example.com', tenantId, roles: [] }];
+      (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
+      (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
 
-    //   const response = await request(app.getHttpServer())
-    //     .get('/v1/admin/users')
-    //     .set('Authorization', `Bearer ${token}`) // Use the generated token
-    //     .set('x-csrf-token', csrfToken) // Needed for CSRF guard
-    //     .set('x-tenant-slug', tenantSlug)
-    //     .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`)// Needed for CSRF guard
-    //     .expect(200); // Should now pass all guards
+      const response = await request(app.getHttpServer())
+        .get('/v1/admin/users')
+        .set('Authorization', `Bearer ${token}`) // Use the generated token
+        .set('x-csrf-token', csrfToken) // Needed for CSRF guard
+        .set('x-tenant-slug', tenantSlug)
+        .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`)// Needed for CSRF guard
+        .expect(200); // Should now pass all guards
 
-    //   expect(response.body).toHaveProperty('data');
-    //   expect(response.body).toHaveProperty('meta');
-    // });
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('meta');
+    });
   });
 
   describe('CSRF Guard Tests', () => {
@@ -677,54 +677,54 @@ describe('Admin Guard Integration Tests', () => {
         expect(response.body).toHaveProperty('message');
     });
 
-//     it('should allow requests with valid CSRF tokens', async () => {
-//     //TO MOVE
-//         const userId = 'admin-user-id';
-//         const tenantId = 'tenant-id';
-//         const sessionId = 'valid-session-id';
-//         const tenantSlug = 'tenant-slug-for-tenant-id';
-//         const csrfToken = 'valid-csrf-token';
-//         const payload: JwtPayload = {
-//             sub: userId,
-//             sessionId: sessionId,
-//             tenantId: tenantId,
-//             csrfToken: csrfToken,
-//             // Expires in 24 hours
-//             exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-//         };
+    it('should allow requests with valid CSRF tokens', async () => {
+    //TO MOVE
+        const userId = 'admin-user-id';
+        const tenantId = 'tenant-id';
+        const sessionId = 'valid-session-id';
+        const tenantSlug = 'tenant-slug-for-tenant-id';
+        const csrfToken = 'valid-csrf-token';
+        const payload: JwtPayload = {
+            sub: userId,
+            sessionId: sessionId,
+            tenantId: tenantId,
+            csrfToken: csrfToken,
+            // Expires in 24 hours
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+        };
 
-//         const token = generateValidJwtToken(payload);
+        const token = generateValidJwtToken(payload);
 
-//         // Mock successful JWT validation
-//         mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
-//         // Mock Role Guard
-//         mockAdminRole(userId, tenantId);
+        // Mock successful JWT validation
+        mockValidJwtSession(userId, tenantId, sessionId, csrfToken);
+        // Mock Role Guard
+        mockAdminRole(userId, tenantId);
 
-// (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
-//     id: tenantId, // Matches the user's tenantId from the token
-//     name: 'Test Tenant',
-//     slug: tenantSlug, // The slug that matches the header value
-//     status: 'ACTIVE',
-//     createdAt: new Date(),
-//     updatedAt: new Date(),
-//   });
+(prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue({
+    id: tenantId, // Matches the user's tenantId from the token
+    name: 'Test Tenant',
+    slug: tenantSlug, // The slug that matches the header value
+    status: 'ACTIVE',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 
-//         // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
-//         const mockUsers = [{ id: 'user3', name: 'User Three', email: 'user3@example.com', tenantId, roles: [] }];
-//         (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
-//         (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
+        // Mock AdminService's calls to prisma.user.findMany and prisma.user.count
+        const mockUsers = [{ id: 'user3', name: 'User Three', email: 'user3@example.com', tenantId, roles: [] }];
+        (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue(mockUsers);
+        (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(mockUsers.length);
 
-//         const response = await request(app.getHttpServer())
-//         .get('/v1/admin/users')
-//         .set('Authorization', `Bearer ${token}`) // Use the generated token
-//         .set('x-csrf-token', csrfToken) // Send matching token
-//         .set('x-tenant-slug', tenantSlug) 
-//         .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Cookie has the token
-//         .expect(200); // Should pass all guards
+        const response = await request(app.getHttpServer())
+        .get('/v1/admin/users')
+        .set('Authorization', `Bearer ${token}`) // Use the generated token
+        .set('x-csrf-token', csrfToken) // Send matching token
+        .set('x-tenant-slug', tenantSlug) 
+        .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Cookie has the token
+        .expect(200); // Should pass all guards
 
-//         expect(response.body).toHaveProperty('data');
-//         expect(response.body).toHaveProperty('meta');
-//     });
+        expect(response.body).toHaveProperty('data');
+        expect(response.body).toHaveProperty('meta');
+    });
   });
 
   describe('Tenant Guard Tests', () => {
@@ -809,45 +809,45 @@ describe('Admin Guard Integration Tests', () => {
         expect(response.body).toHaveProperty('message');
     });
 
-    // it('should reject requests with non-existent tenant', async () => {
-    // // TO MOVE
-    //     const userId = 'admin-user-id';
-    //     const tokenTenantId = 'token-tenant-id'; // Tenant from JWT (via mock)
-    //     const requestTenantSlug = 'non-existent-tenant';
-    //     const sessionId = 'valid-session-id';
-    //     const csrfToken = 'valid-csrf-token';
-    //     const payload: JwtPayload = {
-    //         sub: userId,
-    //         sessionId: sessionId,
-    //         tenantId: tokenTenantId,
-    //         csrfToken: csrfToken,
-    //         // Expires in 24 hours
-    //         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-    //     };
+    it('should reject requests with non-existent tenant', async () => {
+    // TO MOVE
+        const userId = 'admin-user-id';
+        const tokenTenantId = 'token-tenant-id'; // Tenant from JWT (via mock)
+        const requestTenantSlug = 'non-existent-tenant';
+        const sessionId = 'valid-session-id';
+        const csrfToken = 'valid-csrf-token';
+        const payload: JwtPayload = {
+            sub: userId,
+            sessionId: sessionId,
+            tenantId: tokenTenantId,
+            csrfToken: csrfToken,
+            // Expires in 24 hours
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+        };
 
-    //     const token = generateValidJwtToken(payload);
+        const token = generateValidJwtToken(payload);
 
-    //     // Mock successful JWT validation for a specific tenant (tokenTenantId)
-    //     mockValidJwtSession(userId, tokenTenantId, sessionId, csrfToken);
-    //     // Mock Role Guard using the token's tenant ID
-    //     mockAdminRole(userId, tokenTenantId);
-    //     // Mock tenant lookup to return null (not found)
-    //     (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue(null);
+        // Mock successful JWT validation for a specific tenant (tokenTenantId)
+        mockValidJwtSession(userId, tokenTenantId, sessionId, csrfToken);
+        // Mock Role Guard using the token's tenant ID
+        mockAdminRole(userId, tokenTenantId);
+        // Mock tenant lookup to return null (not found)
+        (prisma.tenant.findUnique as jest.MockedFunction<any>).mockResolvedValue(null);
 
-    //     // Mock AdminService's potential call to prisma.user.findMany and prisma.user.count
-    //     (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue([]);
-    //     (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(0);
+        // Mock AdminService's potential call to prisma.user.findMany and prisma.user.count
+        (prisma.user.findMany as jest.MockedFunction<any>).mockResolvedValue([]);
+        (prisma.user.count as jest.MockedFunction<any>).mockResolvedValue(0);
 
-    //     const response = await request(app.getHttpServer())
-    //     .get('/v1/admin/users')
-    //     .set('Authorization', `Bearer ${token}`) // Use the generated token
-    //     .set('x-csrf-token', csrfToken) // Needed for CSRF guard
-    //     .set('x-tenant-slug', requestTenantSlug) // Requesting different tenant
-    //     .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Needed for CSRF guard
-    //     .expect(403); // Should fail Tenant guard because tenant doesn't exist
+        const response = await request(app.getHttpServer())
+        .get('/v1/admin/users')
+        .set('Authorization', `Bearer ${token}`) // Use the generated token
+        .set('x-csrf-token', csrfToken) // Needed for CSRF guard
+        .set('x-tenant-slug', requestTenantSlug) // Requesting different tenant
+        .set('Cookie', `latch_session=${sessionId}; latch_csrf=${csrfToken}`) // Needed for CSRF guard
+        .expect(403); // Should fail Tenant guard because tenant doesn't exist
 
-    //     expect(response.body).toHaveProperty('message');
-    // });
+        expect(response.body).toHaveProperty('message');
+    });
 
     it('should reject requests with tenant mismatch', async () => {
         const userId = 'admin-user-id';
