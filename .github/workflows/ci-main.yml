@@ -147,6 +147,19 @@ jobs:
             echo "latch-auth-ci-artifacts directory does not exist"
           fi     
 
+      - name: Debug - Sum LF and LH lines explicitly
+        run: |
+          TOTAL_LF=$(awk '/^LF:/ { sum += $2 } END { print sum+0 }' apps/latch-auth/coverage/lcov.info)
+          TOTAL_LH=$(awk '/^LH:/ { sum += $2 } END { print sum+0 }' apps/latch-auth/coverage/lcov.info)
+          echo "Total LF (Lines Found): $TOTAL_LF"
+          echo "Total LH (Lines Hit): $TOTAL_LH"
+          if [ "$TOTAL_LF" -gt 0 ]; then
+            CALCULATED_COVERAGE=$(echo "scale=2; ($TOTAL_LH / $TOTAL_LF) * 100" | bc)
+            echo "Calculated Coverage (using bc): $CALCULATED_COVERAGE%"
+          else
+            echo "Calculated Coverage (using bc): 0%"
+          fi     
+
       - name: Check coverage thresholds
         run: |
           # Check if coverage meets minimum thresholds (80%)
