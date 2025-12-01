@@ -99,13 +99,17 @@ jobs:
       - name: Update dependencies to fix vulnerabilities
         working-directory: apps/latch-auth
         run: |
-          echo "Updating primary packages to resolve transitive vulnerabilities..."
-          # Update core NestJS packages
-          bun update @nestjs/cli @nestjs/platform-express @nestjs/swagger
-          # Update testing packages
-          bun update jest ts-jest jest-mock-extended
+          echo "Updating all known dependencies to resolve vulnerabilities..."
           
-          # Reinstall to ensure all lockfile entries are updated with the new versions
+          # Target NestJS, Testing, and Validation parent dependencies
+          bun update @nestjs/cli @nestjs/platform-express @nestjs/swagger \
+            jest ts-jest jest-mock-extended \
+            class-validator
+            
+          # Target direct Sentry dependency
+          bun update @sentry/node
+          
+          # Reinstall to ensure the lockfile reflects the new, patched versions
           bun install --frozen-lockfile
           
           echo "Updates complete. Proceeding to audit."
