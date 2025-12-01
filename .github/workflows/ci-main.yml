@@ -155,6 +155,15 @@ jobs:
           echo "Last 10 lines of lcov.info:"
           tail -n 10 apps/latch-auth/coverage/lcov.info
 
+      - name: Debug - Check lcov.info content and match patterns
+        run: |
+          echo "File type:"
+          file apps/latch-auth/coverage/lcov.info
+          echo "Checking for LF: lines (verbose awk):"
+          awk '/^LF:/ { print "Found LF line:", $0; sum += $2 } END { print "Sum of LF:", sum+0 }' apps/latch-auth/coverage/lcov.info
+          echo "Checking for LH: lines (verbose awk):"
+          awk '/^LH:/ { print "Found LH line:", $0; sum += $2 } END { print "Sum of LH:", sum+0 }' apps/latch-auth/coverage/lcov.info   
+
       - name: Debug - Sum LF and LH lines explicitly
         run: |
           TOTAL_LF=$(awk '/^LF:/ { sum += $2 } END { print sum+0 }' apps/latch-auth/coverage/lcov.info)
