@@ -51,6 +51,8 @@ jobs:
           # Generate a flat config file using the migrator
           bunx @eslint/migrate-config .eslintrc.json
           # The migrator creates eslint.config.js
+          # List files to confirm it was created
+          ls -la eslint.config.*
         
       - name: Run Typecheck
         working-directory: apps/latch-auth
@@ -73,8 +75,8 @@ jobs:
             ERR_COUNT=$(echo "$OUTPUT" | wc -l)
             SUMMARY="❌ Lint issues found ($ERR_COUNT items)"
           else
-            # Configuration or other error (shouldn't happen now with flat config)
-            SUMMARY="❌ Lint command failed (config issue)"
+            # Configuration or other error
+            SUMMARY="❌ Lint command failed (exit code $EXIT_CODE)"
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
         
