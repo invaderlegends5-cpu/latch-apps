@@ -55,13 +55,15 @@ jobs:
 
       - name: Generate Lint Summary
         id: summary
+        working-directory: apps/latch-auth
         run: |
-          ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet | wc -l || echo 0)
+          ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet --no-error-on-unmatched-pattern | wc -l || echo 0)
           if [ "$ERR_COUNT" -eq 0 ]; then
-            echo "::set-output name=text::✅ Lint passed"
+            SUMMARY="✅ Lint passed"
           else
-            echo "::set-output name=text::❌ Lint issues found ($ERR_COUNT errors)"
+            SUMMARY="❌ Lint issues found ($ERR_COUNT errors)"
           fi
+          echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
       - name: Upload Lint Artifact
         if: always()
