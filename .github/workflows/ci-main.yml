@@ -80,7 +80,7 @@ jobs:
           name: latch-auth-lint-results
           path: apps/latch-auth/latch-auth-ci-artifacts/junit.xml
           if-no-files-found: ignore
-  security:
+    security:
     name: Security Scanning
     runs-on: ubuntu-latest
     steps:
@@ -92,17 +92,19 @@ jobs:
         with:
           bun-version: latest
         
-      - name: Install dependencies (initial)
+      - name: Install dependencies
         working-directory: apps/latch-auth
-        run: bun install --frozen-lockfile # Start with the checked-in lockfile
+        run: bun install --frozen-lockfile
         
-      - name: Update dependencies to latest versions (including breaking changes)
+      - name: Update dependencies (general and targeted)
         working-directory: apps/latch-auth
         run: |
-          # Update ALL dependencies to their latest versions allowed by semver
-          bun update --latest
-          # Reinstall to regenerate the lockfile based on the new resolutions
-          bun install
+          # Update dependencies to latest compatible versions
+          bun update
+          # Attempt to update specific vulnerable packages
+          bun update js-yaml body-parser glob
+          # Reinstall to update the lockfile with potentially newer versions
+          bun install --frozen-lockfile
 
       - name: Run security audit
         working-directory: apps/latch-auth
@@ -119,8 +121,7 @@ jobs:
                exit 1
              fi
           done
-          echo "✅ No dangerous imports found"                
-
+          echo "✅ No dangerous imports found"                 
   coverage:
     name: Coverage Validation
     runs-on: ubuntu-latest
