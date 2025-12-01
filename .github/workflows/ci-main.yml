@@ -35,16 +35,19 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-    
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-        
+
       - name: Install deps (lint lane)
         working-directory: apps/latch-auth
-        run: bun install --frozen-lockfile
-        
+        run: |
+          bun install --frozen-lockfile
+          # Ensure @nestjs/eslint-config and its dependencies are available
+          bun add --dev @nestjs/eslint-config
+
       - name: Migrate ESLint Config for v9
         working-directory: apps/latch-auth
         run: |
@@ -53,15 +56,15 @@ jobs:
           # The migrator creates eslint.config.js
           # List files to confirm it was created
           ls -la eslint.config.*
-        
+
       - name: Run Typecheck
         working-directory: apps/latch-auth
         run: bunx tsc --noEmit --project tsconfig.lint.json
-        
+
       - name: Run Lint
         working-directory: apps/latch-auth
         run: bunx eslint "src/**/*.ts" --quiet || true
-        
+
       - name: Generate Lint Summary
         id: summary
         working-directory: apps/latch-auth
@@ -79,7 +82,7 @@ jobs:
             SUMMARY="❌ Lint command failed (exit code $EXIT_CODE)"
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-        
+
       - name: Upload Lint Artifact
         if: always()
         uses: actions/upload-artifact@v4
