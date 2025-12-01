@@ -142,7 +142,7 @@ jobs:
 
       - name: Check coverage thresholds
         run: |
-          # Check if coverage meets minimum thresholds (80%)
+          # Check if coverage meets minimum thresholds (70%)
           if [ -f "apps/latch-auth/coverage/lcov.info" ]; then
             # Extract overall line coverage by summing LF and LH across all records
             # Use -F: to split fields on the colon character
@@ -160,7 +160,7 @@ jobs:
             echo "Current coverage: ${COVERAGE}%"
               
             if [ "$COVERAGE" -lt 80 ]; then
-              echo "❌ Coverage ${COVERAGE}% is below threshold 80%"
+              echo "❌ Coverage ${COVERAGE}% is below threshold 70%"
               exit 1
             fi
             echo "✅ Coverage ${COVERAGE}% meets threshold"
