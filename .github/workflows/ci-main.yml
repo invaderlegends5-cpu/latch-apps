@@ -96,33 +96,15 @@ jobs:
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile # This ensures a baseline based on the committed lockfile initially
         
-      - name: Force update dependencies to fix vulnerabilities
+      - name: Apply dependency resolutions and regenerate lockfile
         working-directory: apps/latch-auth
         run: |
-          echo "Forcing update of vulnerable transitive dependencies..."
+          echo "Applying 'resolutions' from package.json and running bun install..."
+          # This command will read the new 'resolutions' field, force those package versions,
+          # and regenerate the bun.lockb file.
+          bun install
           
-          # Force specific patched versions for the vulnerable packages
-          # glob: Direct dep is 11.1.0, but transitive ones (e.g., via jest) might be older.
-          #       Bun's linker might not fully prevent older transitive installs if parent packages require them.
-          #       We'll force the direct dep again just in case and hope transitive ones resolve correctly later or are handled by ecosystem updates.
-          #       The audit specifically flags glob 10.x series. The direct dep is 11.1.0. The issue is likely transitive.
-          #       For now, focus on the ones we know force-updating should work easily:
-          
-          # body-parser: Force to patched version
-          bun add body-parser@^2.2.1
-          
-          # js-yaml: Force to patched version (4.1.1+ fixes prototype pollution)
-          bun add js-yaml@^4.1.1
-          
-          # Note: For glob, ideally the parent packages (jest, @nestjs/cli, etc.) need to update their glob dependency.
-          #       You already have glob@^11.1.0 as a direct dep. If bun add glob@^11.1.0 helps force transitive ones, you can add it:
-          # bun add glob@^11.1.0 
-          
-          # Reinstall *without* --frozen-lockfile to allow the lockfile to be regenerated
-          # reflecting the forced dependency versions from the 'bun add' commands.
-          bun install # This will update bun.lock based on the forced package.json changes
-          
-          echo "Forced updates complete. Lockfile regenerated. Proceeding to audit."
+          echo "Forced updates complete. Proceeding to audit."
 
       - name: Run security audit
         working-directory: apps/latch-auth
