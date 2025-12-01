@@ -27,7 +27,7 @@ env:
   AWS_REGION: us-east-1
 
 jobs:
-    lint-typecheck:
+  lint-typecheck:
     name: Lint & TypeCheck
     runs-on: ubuntu-latest
     outputs:
@@ -35,27 +35,27 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
+    
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-
+        
       - name: Install deps (lint lane)
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
-
+        
       - name: Run Typecheck
         working-directory: apps/latch-auth
         run: bunx tsc --noEmit --project tsconfig.lint.json
-
+        
       - name: Generate Lint Summary (Ignore Config Errors)
         id: summary
         working-directory: apps/latch-auth
         run: |
           OUTPUT=$(bunx eslint "src/**/*.ts" --quiet 2>&1)
           EXIT_CODE=$?
-
+          
           if [ $EXIT_CODE -eq 0 ]; then
             SUMMARY="✅ Lint passed"
           elif [ $EXIT_CODE -eq 1 ]; then
@@ -72,7 +72,7 @@ jobs:
             fi
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
-
+        
       - name: Upload Lint Artifact (if exists)
         if: always() && (hashFiles('apps/latch-auth/latch-auth-ci-artifacts/junit.xml') != '')
         uses: actions/upload-artifact@v4
