@@ -57,7 +57,8 @@ jobs:
         id: summary
         working-directory: apps/latch-auth
         run: |
-          ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet --no-error-on-unmatched-pattern | wc -l || echo 0)
+          # Use the existing .eslintrc configuration
+          ERR_COUNT=$(bunx eslint "src/**/*.ts" --quiet --no-error-on-unmatched-pattern --config .eslintrc.json | wc -l || echo 0)
           if [ "$ERR_COUNT" -eq 0 ]; then
             SUMMARY="✅ Lint passed"
           else
