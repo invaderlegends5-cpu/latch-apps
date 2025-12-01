@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Typecheck
         working-directory: apps/latch-auth
-        run: bun run build && bunx tsc --noEmit
+        run: bunx tsc --noEmit --project tsconfig.lint.json
 
       - name: Run Lint
         working-directory: apps/latch-auth
