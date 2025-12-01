@@ -80,7 +80,7 @@ jobs:
           name: latch-auth-lint-results
           path: apps/latch-auth/latch-auth-ci-artifacts/junit.xml
           if-no-files-found: ignore
-    security:
+  security:
     name: Security Scanning
     runs-on: ubuntu-latest
     steps:
@@ -96,14 +96,12 @@ jobs:
         working-directory: apps/latch-auth
         run: bun install --frozen-lockfile
         
-      - name: Update dependencies (general and targeted)
+      - name: Update dependencies to fix vulnerabilities
         working-directory: apps/latch-auth
         run: |
           # Update dependencies to latest compatible versions
           bun update
-          # Attempt to update specific vulnerable packages
-          bun update js-yaml body-parser glob
-          # Reinstall to update the lockfile with potentially newer versions
+          # Reinstall to update the lockfile
           bun install --frozen-lockfile
 
       - name: Run security audit
@@ -121,7 +119,7 @@ jobs:
                exit 1
              fi
           done
-          echo "✅ No dangerous imports found"                 
+          echo "✅ No dangerous imports found"         
   coverage:
     name: Coverage Validation
     runs-on: ubuntu-latest
