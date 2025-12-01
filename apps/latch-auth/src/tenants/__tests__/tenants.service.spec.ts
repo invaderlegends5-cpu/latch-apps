@@ -1127,8 +1127,8 @@ it('should throw BadRequestException when tenant policy update fails', async () 
   // Mock the transaction calls
   (prisma.tenant.findUnique as jest.Mock).mockResolvedValue(tenant);
   (prisma.tenant.update as jest.Mock).mockResolvedValue(updatedTenant);
-  (prisma.tenantPolicy.upsert as jest.Mock).mockRejectedValue(new Error('Database error'));
-  (prisma.event.create as jest.Mock).mockResolvedValue({ id: 'event1' });
+  (prisma.tenantPolicy.upsert as jest.Mock).mockResolvedValue({ id: 'policy1', tenantId: 'tenant1' });
+  (prisma.event.create as jest.Mock).mockRejectedValue(new Error('Database error'));
 
   await expect(service.update('old-tenant', updateTenantDto, 'user1'))
     .rejects
