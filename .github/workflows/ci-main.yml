@@ -130,59 +130,23 @@ jobs:
         with:
           name: latch-auth-unit-results
           path: apps/latch-auth/
-      - name: Debug - List downloaded artifact contents
-        run: |
-          echo "Contents of apps/latch-auth after download:"
-          ls -la apps/latch-auth/
-          echo "Contents of apps/latch-auth/latch-auth-ci-artifacts if it exists:"
-          if [ -d "apps/latch-auth/latch-auth-ci-artifacts" ]; then
-            ls -la apps/latch-auth/latch-auth-ci-artifacts/
-            echo "Contents of coverage directory if it exists:"
-            if [ -d "apps/latch-auth/latch-auth-ci-artifacts/coverage" ]; then
-              ls -la apps/latch-auth/latch-auth-ci-artifacts/coverage/
-            else
-              echo "Coverage directory does not exist"
-            fi
-          else
-            echo "latch-auth-ci-artifacts directory does not exist"
-          fi     
 
-      - name: Debug - Check lcov.info content (first and last 10 lines)
-        run: |
-          echo "First 10 lines of lcov.info:"
-          head -n 10 apps/latch-auth/coverage/lcov.info
-          echo "..."
-          echo "Last 10 lines of lcov.info:"
-          tail -n 10 apps/latch-auth/coverage/lcov.info
-
-      - name: Debug - Check lcov.info content and match patterns
+      - name: Debug - Check lcov.info content and match patterns with correct field separator
         run: |
           echo "File type:"
           file apps/latch-auth/coverage/lcov.info
-          echo "Checking for LF: lines (verbose awk):"
-          awk '/^LF:/ { print "Found LF line:", $0; sum += $2 } END { print "Sum of LF:", sum+0 }' apps/latch-auth/coverage/lcov.info
-          echo "Checking for LH: lines (verbose awk):"
-          awk '/^LH:/ { print "Found LH line:", $0; sum += $2 } END { print "Sum of LH:", sum+0 }' apps/latch-auth/coverage/lcov.info   
-
-      - name: Debug - Sum LF and LH lines explicitly
-        run: |
-          TOTAL_LF=$(awk '/^LF:/ { sum += $2 } END { print sum+0 }' apps/latch-auth/coverage/lcov.info)
-          TOTAL_LH=$(awk '/^LH:/ { sum += $2 } END { print sum+0 }' apps/latch-auth/coverage/lcov.info)
-          echo "Total LF (Lines Found): $TOTAL_LF"
-          echo "Total LH (Lines Hit): $TOTAL_LH"
-          if [ "$TOTAL_LF" -gt 0 ]; then
-            CALCULATED_COVERAGE=$(echo "scale=2; ($TOTAL_LH / $TOTAL_LF) * 100" | bc)
-            echo "Calculated Coverage (using bc): $CALCULATED_COVERAGE%"
-          else
-            echo "Calculated Coverage (using bc): 0%"
-          fi     
+          echo "Checking for LF: lines (verbose awk with -F:):"
+          awk -F: '/^LF:/ { print "Found LF line:", $0, "Value:", $2; sum += $2 } END { print "Sum of LF:", sum+0 }' apps/latch-auth/coverage/lcov.info
+          echo "Checking for LH: lines (verbose awk with -F:):"
+          awk -F: '/^LH:/ { print "Found LH line:", $0, "Value:", $2; sum += $2 } END { print "Sum of LH:", sum+0 }' apps/latch-auth/coverage/lcov.info
 
       - name: Check coverage thresholds
         run: |
           # Check if coverage meets minimum thresholds (80%)
           if [ -f "apps/latch-auth/coverage/lcov.info" ]; then
             # Extract overall line coverage by summing LF and LH across all records
-            COVERAGE=$(awk '
+            # Use -F: to split fields on the colon character
+            COVERAGE=$(awk -F: '
               /^LF:/ { total_lines += $2 }
               /^LH:/ { hit_lines += $2 }
               END {
