@@ -57,20 +57,22 @@ jobs:
         id: summary
         working-directory: apps/latch-auth
         run: |
-          # Run the same lint command as defined in package.json which should work
-          bun run lint 2>/dev/null || LINT_EXIT_CODE=$?
-          if [ "$LINT_EXIT_CODE" -eq 0 ] || [ "$LINT_EXIT_CODE" -eq 1 ]; then # 0=success, 1=lint errors found but no other issues
-            # Count errors by running with --quiet and seeing if output is empty
-            LINT_OUTPUT=$(bun run lint -- --quiet 2>&1)
-            if [ -z "$LINT_OUTPUT" ]; then
-              SUMMARY="✅ Lint passed"
-            else
-              ERR_COUNT=$(echo "$LINT_OUTPUT" | wc -l)
-              SUMMARY="❌ Lint issues found ($ERR_COUNT items)"
-            fi
+          # Run ESLint directly on src directory using the glob pattern from package.json
+          # This might help isolate the config issue
+          LINT_OUTPUT=$(bunx eslint "src/**/*.ts" --fix --quiet 2>&1)
+          LINT_EXIT_CODE=$?
+          
+          if [ $LINT_EXIT_CODE -eq 0 ]; then
+            SUMMARY="✅ Lint passed"
+          elif [ $LINT_EXIT_CODE -eq 1 ]; then
+            # Exit code 1 usually means lint problems found, but not config errors
+            ERR_COUNT=$(echo "$LINT_OUTPUT" | wc -l)
+            SUMMARY="❌ Lint issues found ($ERR_COUNT items)"
           else
+            # Exit code 2 or other usually means configuration or other error
             echo "❌ Lint command failed with exit code $LINT_EXIT_CODE"
-            SUMMARY="❌ Lint command failed"
+            echo "Output: $LINT_OUTPUT"
+            SUMMARY="❌ Lint command failed (exit code $LINT_EXIT_CODE)"
           fi
           echo "text=$SUMMARY" >> $GITHUB_OUTPUT
 
