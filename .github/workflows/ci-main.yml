@@ -101,8 +101,8 @@ jobs:
         run: |
           # Update ALL dependencies to latest, potentially including breaking changes
           bun update --latest
-          # Reinstall to update the lockfile
-          bun install --frozen-lockfile
+          # Reinstall to update the lockfile (use 'bun install' without --frozen-lockfile)
+          bun install # FIX: Changed from bun install --frozen-lockfile
 
       - name: Run security audit
         working-directory: apps/latch-auth
