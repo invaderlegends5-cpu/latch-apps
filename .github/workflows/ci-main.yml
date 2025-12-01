@@ -130,6 +130,22 @@ jobs:
         with:
           name: latch-auth-unit-results
           path: apps/latch-auth/
+      - name: Debug - List downloaded artifact contents
+        run: |
+          echo "Contents of apps/latch-auth after download:"
+          ls -la apps/latch-auth/
+          echo "Contents of apps/latch-auth/latch-auth-ci-artifacts if it exists:"
+          if [ -d "apps/latch-auth/latch-auth-ci-artifacts" ]; then
+            ls -la apps/latch-auth/latch-auth-ci-artifacts/
+            echo "Contents of coverage directory if it exists:"
+            if [ -d "apps/latch-auth/latch-auth-ci-artifacts/coverage" ]; then
+              ls -la apps/latch-auth/latch-auth-ci-artifacts/coverage/
+            else
+              echo "Coverage directory does not exist"
+            fi
+          else
+            echo "latch-auth-ci-artifacts directory does not exist"
+          fi     
 
       - name: Check coverage thresholds
         run: |
