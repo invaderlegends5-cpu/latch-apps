@@ -1,3 +1,4 @@
+//src/bot-detection/bot-detection.controller.ts
 import {
     Controller,
     Get,

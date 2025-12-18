@@ -1,3 +1,4 @@
+//src/device-fingerprinting/device-fingerprinting.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventLogService } from '../events/event.service';

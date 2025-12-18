@@ -15,7 +15,10 @@ export const CSRF_COOKIE_NAME = 'latch_csrf';
  */
 const baseOptions = {
   sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  // Updated to handle Docker/test environments properly
+  secure: process.env.NODE_ENV === 'production' && 
+          process.env.DOCKER_ENV !== 'test' && 
+          process.env.DOCKER_ENV !== 'development',
   signed: false,
   path: '/', // ✅ added so set & clear match
 };
@@ -28,15 +31,20 @@ export function setRefreshCookies(
   opts?: { maxAgeDays?: number },
 ) {
   const maxAge = (opts?.maxAgeDays ?? 7) * 24 * 60 * 60 * 1000;
+  
+  // Determine if we're in a Docker/test environment
   const isProd = process.env.NODE_ENV === 'production';
+  const isDockerTest = process.env.DOCKER_ENV === 'test' || process.env.DOCKER_ENV === 'development';
+  const isSecure = isProd && !isDockerTest;
+  
   // Refresh token
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     ...baseOptions,
     httpOnly: true,
     maxAge,
-    secure: isProd,
+    secure: isSecure,
     signed: false,
-    domain: isProd ? process.env.COOKIE_DOMAIN : undefined,
+    domain: isProd && !isDockerTest ? process.env.COOKIE_DOMAIN : undefined,
   });
 
   // Session ID
@@ -44,20 +52,30 @@ export function setRefreshCookies(
     ...baseOptions,
     httpOnly: true,
     maxAge,
+    secure: isSecure,
   });
 
   // CSRF token (readable by JS)
   if (csrfToken) {
     res.cookie(CSRF_COOKIE_NAME, csrfToken, {
       ...baseOptions,
-      httpOnly: false,
+      httpOnly: false, // CSRF token needs to be accessible by JS
       maxAge,
+      secure: isSecure,
     });
   }
 }
 
 export function clearRefreshCookies(res: Response) {
-  const expired = { ...baseOptions, expires: new Date(0) };
+  const isProd = process.env.NODE_ENV === 'production';
+  const isDockerTest = process.env.DOCKER_ENV === 'test' || process.env.DOCKER_ENV === 'development';
+  const isSecure = isProd && !isDockerTest;
+  
+  const expired = { 
+    ...baseOptions, 
+    expires: new Date(0),
+    secure: isSecure,
+  };
 
   res.cookie(REFRESH_COOKIE_NAME, '', { ...expired, httpOnly: true });
   res.cookie(SESSION_COOKIE_NAME, '', { ...expired, httpOnly: true });

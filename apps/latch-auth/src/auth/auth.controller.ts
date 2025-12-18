@@ -4,6 +4,9 @@ import { ClearCookiesUnauthorizedException } from './exceptions/clear-cookies-un
 import {
   Body,
   Controller,
+  Get,
+  NotFoundException,
+  Param,
   Post,
   Req,
   Res,
@@ -21,6 +24,7 @@ import { CsrfGuard } from './guards/csrf.guard';
 import * as authTypes from './types/auth.types';
 import { EventLogService } from '../events/event.service';
 import { SessionGuard } from './guards/session.guard';
+import { DevOtpStore } from '@/utils/dev-otp-store';
 
 @Controller('auth')
 export class AuthController {
@@ -224,4 +228,21 @@ export class AuthController {
     clearRefreshCookies(res);
     return { ok: true, revokedCount };
   }
+
+
+@Get('test/otp/:phone')
+async getTestOtp(@Param('phone') phone: string) {
+  // Only available in test/development mode
+  if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development') {
+    throw new UnauthorizedException('This endpoint is only available in test/development mode');
+  }
+  
+  const otp = DevOtpStore.get(phone);
+  if (!otp) {
+    throw new NotFoundException('OTP not found for phone number');
+  }
+  
+  return { otp };
+}
+
 }

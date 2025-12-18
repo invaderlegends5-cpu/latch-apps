@@ -239,7 +239,8 @@ export class AuthService {
         csrfToken,
       },
     });
-
+    console.log('[AuthService.verifyOtp] Response will include CSRF token:', csrfToken);
+    
     // after creating session (session.id exists)
     const payload = {
       sub: user.id,

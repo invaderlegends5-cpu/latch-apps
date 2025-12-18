@@ -10,6 +10,7 @@ import { EventType } from '../events/event.types';
 import { RedisService } from '../redis/redis.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as Sentry from '@sentry/node';
+import { normalizeIp } from '@/auth/utils/normalize.util';
 
 @Injectable()
 export class IPReputationService implements OnModuleInit, OnModuleDestroy {
@@ -71,41 +72,54 @@ export class IPReputationService implements OnModuleInit, OnModuleDestroy {
    */
   private isValidIP(ip: string): boolean {
     if (typeof ip !== 'string' || !ip) return false;
-    
+  
     // SECURITY: Comprehensive IP validation
-    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-    const ipv6CompressedRegex = /^((?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)::((?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)$/;
-    
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip) || ipv6CompressedRegex.test(ip) || ip === 'localhost';
+    // Allow standard formats and also formats potentially created by maskIp (e.g. 127.0.0.x -> 127.0.0 after normalization)
+    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // Standard IPv4
+    const ipv4IncompleteRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){1,3}$/; // e.g., 127, 127.0, 127.0.0 (from maskIp)
+    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/; // Standard IPv6
+    const ipv6CompressedRegex = /^((?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)::((?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)$/; // Compressed IPv6
+  
+    return ipv4Regex.test(ip) || ipv4IncompleteRegex.test(ip) || ipv6Regex.test(ip) || ipv6CompressedRegex.test(ip) || ip === 'localhost';
   }
 
   async getReputation(ip: string): Promise<IPReputationScore | null> {
-      // SECURITY: Validate input before processing
-  if (!this.isValidIP(ip)) {
-    this.logger.warn(`Invalid IP address format: ${ip}`);
-    Sentry.captureMessage(`Invalid IP address format attempted: ${ip}`, 'warning');
-    return null;
-  }
+    // Add this log
+    this.logger.log(`getReputation called with IP: "${ip}"`);
+
+    // Normalize the IP first
+    const normalizedIpForValidation = normalizeIp(ip);
+    if (normalizedIpForValidation === null) {
+      this.logger.warn(`IP normalization failed (null input after processing): ${ip}`);
+      Sentry.captureMessage(`IP normalization failed (null input after processing): ${ip}`, 'warning');
+      return null;
+    }
+
+    // SECURITY: Validate the *normalized* input before processing
+    if (!this.isValidIP(normalizedIpForValidation)) {
+      this.logger.warn(`Invalid IP address format after normalization: ${normalizedIpForValidation} (original: ${ip})`);
+      Sentry.captureMessage(`Invalid IP address format after normalization: ${normalizedIpForValidation}`, 'warning');
+      return null;
+    }
 
     try {
-      // First check cache
+      // First check cache using the ORIGINAL IP (as stored/retrieved)
       const cached = await this.getCachedReputation(ip);
       if (cached) return cached;
 
-      // Query database
-      const score = await this.calculateReputation(ip);
-      
-      // Cache the result
+      // Query database using the ORIGINAL IP
+      const score = await this.calculateReputation(ip); // Pass original IP for DB query
+
+      // Cache the result using the ORIGINAL IP
       await this.setCachedReputation(score);
-      
+
       return score;
     } catch (error) {
-      this.logger.error(`Error getting reputation for IP ${ip}:`, error);
+      this.logger.error(`Error getting reputation for IP ${ip} (normalized: ${normalizedIpForValidation}):`, error);
        Sentry.captureException(error, {
       level: 'error',
       tags: { component: 'ip-reputation', method: 'getReputation' },
-      extra: { ip }
+      extra: { ip, normalizedIp: normalizedIpForValidation }
     });
       return null;
     }
@@ -126,8 +140,39 @@ export class IPReputationService implements OnModuleInit, OnModuleDestroy {
    * Calculate reputation score based on event history
    */
   private async calculateReputation(ip: string): Promise<IPReputationScore> {
-    if (!this.isValidIP(ip)) {
+    this.logger.log(`calculateReputation called with IP: "${ip}"`);
+    
+    if (ip.includes('.x') || ip.includes('::')) {
+      this.logger.warn(`Skipping reputation calculation for masked IP: ${ip}`);
+      // Return a default reputation score for masked IPs
+      return {
+        ip,
+        score: 0, // Neutral score for masked IPs
+        riskLevel: 'LOW',
+        totalEvents: 0,
+        securityEvents: 0,
+        lastUpdated: new Date(),
+        eventCounts: {} as any,
+        threatIndicators: [],
+        reputationHistory: [],
+        blocked: false,
+        whitelisted: false,
+        metadata: {
+          lastEvent: null,
+          firstEvent: null,
+        },
+      };
+    }
+    
+    const normalizedIp = normalizeIp(ip);
+    this.logger.log(`calculateReputation normalized IP: "${normalizedIp}" from original: "${ip}"`);
+    if (normalizedIp === null) {
       throw new Error(`Invalid IP address: ${ip}`);
+    }
+    
+    if (!this.isValidIP(normalizedIp)) {
+      this.logger.error(`Normalized IP failed validation: "${normalizedIp}"`);
+      throw new Error(`Invalid IP address: ${normalizedIp}`);
     }
 
     // Get events for this IP in the last 30 days
@@ -210,6 +255,19 @@ export class IPReputationService implements OnModuleInit, OnModuleDestroy {
    * Update reputation based on new events
    */
   async updateReputation(ip: string, eventType: EventType): Promise<ReputationUpdateResult> {
+   
+    if (ip.includes('.x') || ip.includes('::')) {
+      this.logger.warn(`Skipping reputation update for masked IP: ${ip}`);
+      return {
+        ip,
+        previousScore: 0,
+        newScore: 0,
+        riskLevelChanged: false,
+        actionTaken: 'NONE',
+        reason: 'Masked IP - reputation not calculated',
+      };
+    }
+
     const previousScore = (await this.getReputation(ip))?.score || 0;
     const newScore = await this.calculateReputation(ip).then(r => r.score);
     
@@ -311,13 +369,18 @@ export class IPReputationService implements OnModuleInit, OnModuleDestroy {
    * Check if IP is blocked
    */
   async isIPBlocked(ip: string): Promise<boolean> {
+    
+    if (ip.includes('.x') || ip.includes('::')) {
+      return false; // Masked IPs are not blocked by definition
+    }
+    
     const block = await this.prisma.iPBlock.findFirst({
       where: {
         ip,
         expiresAt: { gte: new Date() },
       },
     });
-    console.log('Available prisma models:', Object.keys(this.prisma));
+    // console.log('Available prisma models:', Object.keys(this.prisma));
 console.log('ipReputation property exists:', 'ipReputation' in this.prisma);
     return !!block;
   }
@@ -326,6 +389,11 @@ console.log('ipReputation property exists:', 'ipReputation' in this.prisma);
    * Get block information for an IP
    */
   async getBlockInfo(ip: string) {
+
+    if (ip.includes('.x') || ip.includes('::')) {
+      return null; // Masked IPs cannot be blocked
+    }
+    
     return await this.prisma.iPBlock.findFirst({
       where: {
         ip,

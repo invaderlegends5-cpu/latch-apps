@@ -1,3 +1,4 @@
+//src/device-fingerprinting/types/device.types.ts
 export interface DeviceFingerprint {
     userAgent: string | null;
     ipAddress: string | null;

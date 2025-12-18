@@ -18,10 +18,11 @@ export class TenantsService {
       throw new BadRequestException('Invalid pagination parameters');
     }
   
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit; // Calculate offset from page/limit
     
-    // Check cache for the paginated results
-    const cacheKey = `tenants:page:${page}:limit:${limit}:counts:${includeCounts}`;
+    // Consider changing cache key to reflect offset if caching raw responses
+    // const cacheKey = `tenants:offset:${offset}:limit:${limit}:counts:${includeCounts}`;
+    const cacheKey = `tenants:page:${page}:limit:${limit}:counts:${includeCounts}`; // Keep current key for now if it works with page-based invalidation
     const cached = await this.redis.get(cacheKey);
     
     if (cached) {
@@ -49,27 +50,35 @@ export class TenantsService {
       };
     }
     
+    // Fetch one more than the limit to determine hasNext
+    const prismaLimit = limit + 1;
+    
     const [tenants, total] = await Promise.all([
       this.prisma.tenant.findMany({
-        skip,
-        take: limit,
+        skip: offset,
+        take: prismaLimit, // Fetch limit + 1
         select: selectConfig,
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.tenant.count(),
     ]);
-  
+
+    // Determine hasNext and adjust the data array
+    const hasNext = tenants.length > limit;
+    const data = hasNext ? tenants.slice(0, limit) : tenants; // Remove the extra fetched item if hasNext is true
+
+    // Construct the result using offset/hasNext model as per core contract
     const result = {
-      data: tenants,
+       data, // Return only the requested number of items
       meta: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+        total,           // Total number of items
+        limit,           // Number of items requested per page
+        offset,          // Offset used for this query
+        hasNext,         // Boolean indicating if more items exist
       },
     };
   
-    // Cache the result
+    // Cache the result (with the corrected structure)
     await this.redis.setex(cacheKey, 300, JSON.stringify(result)); // 5 minutes TTL
   
     return result;

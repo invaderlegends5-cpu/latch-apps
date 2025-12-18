@@ -86,8 +86,9 @@ async function bootstrap() {
 
   app.useGlobalFilters(new ClearCookiesExceptionFilter());
 
-  await app.listen(process.env.PORT ? Number(process.env.PORT) : 3000);
-  console.log(`Latch API running on ${await app.getUrl()}`);
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  await app.listen(port, '127.0.0.1'); // Listen specifically on IPv4 loopback
+  console.log(`Latch API running on http://127.0.0.1:${port}`);
 }
 
 void bootstrap();

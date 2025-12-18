@@ -47,16 +47,7 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
   const hasLatchSessionCookie = req.cookies && req.cookies['latch_session'] !== undefined;
   const latchSessionCookieValue = req.cookies ? req.cookies['latch_session'] : undefined;
 
-  console.log('🔍 CSRF Guard Debug:', {
-    url: req.url,
-    method: req.method,
-    hasXCsrf: !!req.headers['x-csrf-token'],
-    xCsrf: req.headers['x-csrf-token'],
-    hasLatchCsrfCookie, // Use the safely determined value
-    latchCsrfCookie: latchCsrfCookieValue, // Use the safely determined value
-    hasLatchSessionCookie, // Use the safely determined value
-    latchSessionCookie: latchSessionCookieValue, // Use the safely determined value
-  });
+  
 
   // Normalize x-csrf-token
   if (Array.isArray(rawHeaderToken)) {
@@ -110,6 +101,25 @@ async canActivate(context: ExecutionContext): Promise<boolean> {
   // const sessionId = req.cookies[SESSION_COOKIE_NAME] || req.body?.sessionId; // OLD LINE - COULD CAUSE ERROR
   const sessionIdFromCookie = req.cookies ? req.cookies['latch_session'] : undefined; // NEW LINE - SAFELY ACCESSES SESSION COOKIE
   const sessionId = sessionIdFromCookie || req.body?.sessionId; // Use the safely retrieved value or body
+
+  console.log('🔍 CSRF Guard Debug:', {
+    url: req.url,
+    method: req.method,
+    hasXCsrf: !!req.headers['x-csrf-token'],
+    xCsrf: req.headers['x-csrf-token'],
+    hasLatchCsrfCookie: req.cookies ? !!req.cookies['latch_csrf'] : false,
+    latchCsrfCookie: req.cookies ? req.cookies['latch_csrf'] : undefined,
+    hasLatchSessionCookie: req.cookies ? !!req.cookies['latch_session'] : false,
+    latchSessionCookie: req.cookies ? req.cookies['latch_session'] : undefined,
+    sessionIdFromCookie: req.cookies ? req.cookies['latch_session'] : undefined,
+    sessionIdFromBody: req.body?.sessionId,
+    sessionId: sessionId, // The resolved session ID
+  });
+  console.log('🔍 CSRF Token Validation:', {
+    headerToken: csrfToken,
+    cookieToken: cookieToken,
+    sessionId: sessionId,
+  });
 
   const isRefreshEndpoint =
     req.url.endsWith('/refresh') && req.method === 'POST';
